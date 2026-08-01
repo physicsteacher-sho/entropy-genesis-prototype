@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<title>ENTROPY: GENESIS 戦闘プロトタイプ v2</title>
+<title>ENTROPY: GENESIS 戦闘プロトタイプ v2.1</title>
 <style>
 :root{--bg:#08111d;--panel:#111a2b;--card:#172235;--text:#eef4ff;--muted:#9fb0c7;--border:#2a3950;--blue:#36b8ff;--blue2:#123d58;--red:#ff6b6b;--orange:#ffb347;--green:#63d39d;--purple:#b792ff}
 *{box-sizing:border-box}html{width:100%;overflow-x:hidden}body{margin:0;background:linear-gradient(#07101b,#111b2b);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif}button{font:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}.app{max-width:1180px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}h1{font-size:22px;margin:0 0 4px}.small{font-size:13px;color:var(--muted)}.badges{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}.badge{border:1px solid var(--blue);background:var(--blue2);padding:6px 10px;border-radius:999px;white-space:nowrap;font-size:13px}.badge.objective{border-color:var(--green);background:rgba(99,211,157,.12)}.phase-banner{border:1px solid var(--border);background:var(--card);border-radius:12px;padding:9px 12px;margin-bottom:12px;display:flex;justify-content:space-between;gap:10px;align-items:center}.phase-banner.enemy{border-color:var(--red);background:rgba(255,107,107,.08)}.phase-banner strong{font-size:14px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}.boardwrap{min-width:0;width:100%}.board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));width:100%;max-width:100%;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--panel)}.cell{position:relative;min-width:0;overflow:hidden;aspect-ratio:1;border:0;border-right:1px solid var(--border);border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:0}.cell:nth-child(8n){border-right:0}.cell:nth-last-child(-n+8){border-bottom:0}.cell.move{background:rgba(54,184,255,.17)}.cell.target{outline:3px solid var(--blue);outline-offset:-3px}.cell.hazard:after{content:"";position:absolute;inset:7%;border:2px dashed var(--orange);border-radius:8px;pointer-events:none}.cell.flash{animation:blast .55s ease-in-out 2;background:rgba(255,179,71,.38)}@keyframes blast{50%{background:rgba(255,179,71,.76)}}.cell.wall:before{content:"▰";position:absolute;inset:0;display:grid;place-items:center;color:#d1dbe7;font-size:clamp(14px,3vw,26px)}.cell.terminal:before{content:"端";position:absolute;inset:13%;display:grid;place-items:center;border:2px solid var(--green);border-radius:10px;color:var(--green);font-weight:800;background:rgba(99,211,157,.09)}.cell.terminal.complete:before{content:"起";background:rgba(99,211,157,.24)}.unit{position:absolute;inset:10%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid currentColor;border-radius:12px;background:var(--card);font-size:clamp(10px,1.7vw,13px);line-height:1.05;z-index:2}.unit.ally{color:var(--blue)}.unit.enemy{color:var(--red)}.unit.acted{opacity:.42}.unit.cancelled{text-decoration:line-through}.unit.active-enemy{animation:pulse 1s infinite;box-shadow:0 0 0 3px rgba(255,107,107,.25)}@keyframes pulse{50%{transform:scale(1.08)}}.hp{font-size:10px;color:var(--muted);margin-top:2px}.center{position:absolute;top:2px;right:3px;color:var(--orange);font-size:10px}.section{border:1px solid var(--border);border-radius:14px;padding:12px;background:var(--card)}.stack>*+*{margin-top:12px}.prediction{display:grid;gap:8px;margin-top:10px}.prediction-item{border-left:3px solid var(--border);padding:8px 8px 8px 10px;border-radius:0 8px 8px 0}.prediction-item.active{border-left-color:var(--red);background:rgba(255,107,107,.09)}.prediction-item.done{opacity:.45}.prediction-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.spd{font-size:11px;color:var(--muted)}.allybar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}.allychip{border:1px solid var(--border);border-radius:12px;padding:8px;background:var(--card);color:var(--text);text-align:left}.allychip.active{border-color:var(--blue);background:var(--blue2)}.allychip.done{opacity:.45}.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.action{min-height:44px;border:1px solid var(--border);border-radius:12px;padding:9px 12px;background:var(--card);color:var(--text);cursor:pointer}.action:hover:not(:disabled){border-color:var(--blue)}.action.primary{background:var(--blue);color:#07111c;border-color:var(--blue);font-weight:700}.action:disabled{opacity:.4;cursor:not-allowed}.guide{margin-top:8px}.log{max-height:180px;overflow:auto;font-size:13px;line-height:1.55;margin-top:8px}.result{border:1px solid var(--blue);background:var(--blue2);border-radius:14px;padding:14px;margin-bottom:12px}.result.win{border-color:var(--green);background:rgba(99,211,157,.13)}.result.lose{border-color:var(--red);background:rgba(255,107,107,.11)}.hidden{display:none}.callout{border-left:4px solid var(--green);background:rgba(99,211,157,.1);border-radius:10px;padding:10px 12px;margin-top:12px}.row{display:flex;justify-content:space-between;gap:8px;align-items:center}.footer{margin-top:16px;font-size:12px;color:var(--muted)}.objective-track{height:10px;border:1px solid var(--border);border-radius:999px;overflow:hidden;margin-top:8px;background:var(--panel)}.objective-fill{height:100%;width:0;background:var(--green);transition:width .25s}.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:7px}.legend span{display:inline-flex;gap:5px;align-items:center}.dot{width:10px;height:10px;border-radius:3px;display:inline-block}.dot.hazard{border:2px dashed var(--orange)}.dot.terminal{border:2px solid var(--green)}
@@ -14,7 +14,7 @@
 <body>
 <main class="app">
   <div class="top">
-    <div><h1>ENTROPY: GENESIS 戦闘プロトタイプ v2</h1><div class="small">3ターン以内にミレアが制御端末を2回操作してください。</div></div>
+    <div><h1>ENTROPY: GENESIS 戦闘プロトタイプ v2.1</h1><div class="small">3ターン以内にミレアが制御端末を2回操作してください。</div></div>
     <div class="badges"><span id="turnBadge" class="badge">TURN 1 / 3</span><span id="progressBadge" class="badge">0 / 4 行動済み</span><span id="objectiveBadge" class="badge objective">端末 0 / 2</span></div>
   </div>
   <div id="phaseBanner" class="phase-banner"><strong id="phaseText">味方フェイズ</strong><span id="phaseSub" class="small">敵の予告を見て、4人を自由な順番で行動させます。</span></div>
@@ -34,7 +34,7 @@
   </div>
   <div class="controls"><button id="enemyPhase" class="action primary" disabled>敵フェイズを実行</button><button id="reset" class="action">最初から</button></div>
   <div class="callout small">敵の攻撃をすべて止める必要はありません。端末操作に使う行動を残しつつ、「止める・利用する・受ける」を選びます。</div>
-  <div class="footer">第2版：複数ターン、目的達成型、敵の順次行動、素早さ順を実装。</div>
+  <div class="footer">第2.1版：予告計算と操作UIの描画停止を修正。</div>
 </main>
 <script>
 (()=>{
@@ -88,36 +88,40 @@ function blocked(a,b,s=state){if(a.y===b.y){const mn=Math.min(a.x,b.x),mx=Math.m
 function sniperTarget(s=state){const sn=unit('e3',s);if(!sn)return null;const c=allies(s).filter(u=>(u.x===sn.x||u.y===sn.y)&&!blocked(sn,u,s));c.sort((a,b)=>a.hp-b.hp||dist(sn,a)-dist(sn,b));return c[0]||null}
 function reachableAfterSteps(m,t,steps,s=state){const copy=clone(s),mc=unit(m.id,copy),tc=unit(t.id,copy);for(let i=0;i<steps;i++)stepToward(mc,tc,copy);return dist(mc,tc)===1}
 function forecastSequence(){
-  const sim=clone(state),out={};let buff=0;
-  for(const intent of state.intents){
-    if(state.doneEnemies.includes(intent.enemyId)){out[intent.enemyId]='実行済み';continue}
-    const e=unit(intent.enemyId,sim);
+  const sim=clone(state),out={};
+  const done=Array.isArray(state.doneEnemies)?state.doneEnemies:[];
+  let buff=0;
+  const simUnit=id=>sim.units.find(u=>u.id===id&&u.hp>0);
+  const simAllies=()=>sim.units.filter(u=>u.side==='ally'&&u.hp>0);
+  const simOccupied=(x,y,ignoreId=null)=>sim.units.some(u=>u.hp>0&&u.id!==ignoreId&&u.x===x&&u.y===y)||(Array.isArray(sim.walls)&&sim.walls.some(w=>w.x===x&&w.y===y));
+  const simStepToward=(m,t)=>{const dx=Math.sign(t.x-m.x),dy=Math.sign(t.y-m.y),opts=Math.abs(t.x-m.x)>=Math.abs(t.y-m.y)?[[m.x+dx,m.y],[m.x,m.y+dy]]:[[m.x,m.y+dy],[m.x+dx,m.y]];for(const [x,y] of opts){if(inside(x,y)&&!simOccupied(x,y,m.id)){m.x=x;m.y=y;return true}}return false};
+  const simGuard=id=>{const gid=sim.guards&&sim.guards[id];return gid?simUnit(gid):null};
+  const simBlocked=(a,b)=>{const walls=Array.isArray(sim.walls)?sim.walls:[];if(a.y===b.y){const mn=Math.min(a.x,b.x),mx=Math.max(a.x,b.x);return walls.some(w=>w.y===a.y&&w.x>mn&&w.x<mx)}if(a.x===b.x){const mn=Math.min(a.y,b.y),mx=Math.max(a.y,b.y);return walls.some(w=>w.x===a.x&&w.y>mn&&w.y<mx)}return false};
+  const simSniperTarget=()=>{const sn=simUnit('e3');if(!sn)return null;const c=simAllies().filter(u=>(u.x===sn.x||u.y===sn.y)&&!simBlocked(sn,u));c.sort((a,b)=>a.hp-b.hp||dist(sn,a)-dist(sn,b));return c[0]||null};
+  for(const intent of (Array.isArray(state.intents)?state.intents:[])){
+    if(done.includes(intent.enemyId)){out[intent.enemyId]='実行済み';continue}
+    const e=simUnit(intent.enemyId);
     if(!e){out[intent.enemyId]='撃破済み';continue}
     if(e.cancelled){out[intent.enemyId]='行動中断';continue}
     if(intent.type==='buff'){buff=1;out[intent.enemyId]='全敵の攻撃力を強化';continue}
     if(intent.type==='assault'){
-      const t=unit(intent.targetId,sim);
-      if(!t){out[intent.enemyId]='対象不在で不発';continue}
-      for(let i=0;i<2;i++){if(dist(e,t)===1)break;stepToward(e,t,sim)}
-      if(dist(e,t)===1){const g=guardFor(t.id,sim),a=g||t;a.hp-=3+buff;out[intent.enemyId]=`${a.name}に${3+buff}ダメージ${g?'（護衛）':''}`}
-      else out[intent.enemyId]=`${t.name}へ接近・移動のみ`;
+      const t=simUnit(intent.targetId);if(!t){out[intent.enemyId]='対象不在で不発';continue}
+      for(let i=0;i<2;i++){if(dist(e,t)===1)break;simStepToward(e,t)}
+      if(dist(e,t)===1){const g=simGuard(t.id),r=g||t;r.hp-=3+buff;out[intent.enemyId]=`${r.name}に${3+buff}ダメージ${g?'（護衛）':''}`}else out[intent.enemyId]=`${t.name}へ接近・移動のみ`;
       continue
     }
     if(intent.type==='sniper'){
-      const t=sniperTarget(sim);
-      if(t){const g=guardFor(t.id,sim),a=g||t;a.hp-=2+buff;out[intent.enemyId]=`${a.name}を狙撃・${2+buff}ダメージ${g?'（護衛）':''}`}
-      else out[intent.enemyId]='射線なし・不発';
+      const t=simSniperTarget();if(t){const g=simGuard(t.id),r=g||t;r.hp-=2+buff;out[intent.enemyId]=`${r.name}を狙撃・${2+buff}ダメージ${g?'（護衛）':''}`}else out[intent.enemyId]='射線なし・不発';
       continue
     }
     if(intent.type==='artillery'){
       const cells=blastCellsForTurn(state.turn),victims=sim.units.filter(u=>u.hp>0&&cells.includes(key(u.x,u.y)));
-      if(!victims.length)out[intent.enemyId]='固定地点を砲撃（命中なし）';
-      else{out[intent.enemyId]=`固定地点を砲撃（${victims.map(v=>v.name).join('・')}）`;victims.forEach(v=>v.hp-=3+buff)}
+      if(!victims.length)out[intent.enemyId]='固定地点を砲撃（命中なし）';else{out[intent.enemyId]=`固定地点を砲撃（${victims.map(v=>v.name).join('・')}）`;victims.forEach(v=>v.hp-=3+buff)}
     }
   }
   return out
 }
-function renderPred(){predictions.innerHTML='';const forecast=forecastSequence();state.intents.forEach((i,index)=>{const e=unit(i.enemyId),d=document.createElement('div');d.className='prediction-item'+(state.activeEnemy===i.enemyId?' active':'')+(state.doneEnemies.includes(i.enemyId)?' done':'');d.innerHTML=`<div class="prediction-head"><strong>${index+1} ${e?e.name:initial.find(u=>u.id===i.enemyId).name}</strong><span class="spd">SPD ${i.spd}</span></div><div class="small">${forecast[i.enemyId]||i.label}</div>`;predictions.appendChild(d)})}
+function renderPred(){predictions.innerHTML='';try{const forecast=forecastSequence(),done=Array.isArray(state.doneEnemies)?state.doneEnemies:[];(Array.isArray(state.intents)?state.intents:[]).forEach((i,index)=>{const e=unit(i.enemyId),base=initial.find(u=>u.id===i.enemyId),d=document.createElement('div');d.className='prediction-item'+(state.activeEnemy===i.enemyId?' active':'')+(done.includes(i.enemyId)?' done':'');d.innerHTML=`<div class="prediction-head"><strong>${index+1} ${e?e.name:(base?base.name:'敵')}</strong><span class="spd">SPD ${i.spd}</span></div><div class="small">${forecast[i.enemyId]||i.label||'行動予告'}</div>`;predictions.appendChild(d)})}catch(err){console.error('Prediction render error:',err);predictions.innerHTML='<div class="small">予告表示を再計算できませんでした。盤面操作は続行できます。</div>'}}
 function renderBoard(){board.innerHTML='';const mv=selected&&mode==='move'?moveCells(unit(selected)):[],tg=selected&&['attack','pull','wall','guard','break'].includes(mode)?targets():[],hazards=blastCellsForTurn(state.turn);for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=document.createElement('button');c.className='cell';const k=key(x,y);if(mv.includes(k))c.classList.add('move');if(tg.includes(k))c.classList.add('target');if(hazards.includes(k))c.classList.add('hazard');if(state.flashCells.includes(k))c.classList.add('flash');if(state.walls.some(w=>w.x===x&&w.y===y))c.classList.add('wall');if(x===terminal.x&&y===terminal.y)c.classList.add('terminal',state.terminalProgress>=2?'complete':'');const u=state.units.find(q=>q.hp>0&&q.x===x&&q.y===y);if(u){const d=document.createElement('div');d.className=`unit ${u.side}${u.acted?' acted':''}${u.cancelled?' cancelled':''}${state.activeEnemy===u.id?' active-enemy':''}`;d.innerHTML=`<span>${u.short}</span><span class="hp">${u.hp}/${u.max}</span>`;c.appendChild(d)}const center=blastCenterForTurn(state.turn);if(x===center.x&&y===center.y){const s=document.createElement('span');s.className='center';s.textContent='砲撃';c.appendChild(s)}c.onclick=()=>clickCell(x,y);board.appendChild(c)}}
 function renderAllies(){allybar.innerHTML='';state.units.filter(u=>u.side==='ally').forEach(a=>{const b=document.createElement('button');b.className=`allychip${selected===a.id?' active':''}${a.acted?' done':''}`;b.disabled=state.phase!=='ally'||a.acted||a.hp<=0;b.innerHTML=`<strong>${a.name}</strong><div class="small">HP ${Math.max(0,a.hp)}/${a.max}${a.acted?'・行動済み':''}</div>`;b.onclick=()=>start(a.id);allybar.appendChild(b)})}
 function guardFor(id,s=state){const g=s.guards[id];return g?unit(g,s):null}
@@ -133,7 +137,7 @@ if(intent.type==='sniper'){const t=sniperTarget();if(t)applyDamage(t,2+buff,e.na
 if(intent.type==='artillery'){const cells=blastCellsForTurn(state.turn);state.flashCells=cells;render();await sleep(650);const victims=state.units.filter(u=>u.hp>0&&cells.includes(key(u.x,u.y)));if(!victims.length)logs.unshift(`${e.name}：砲撃は命中なし`);victims.forEach(v=>{v.hp-=3+buff;logs.unshift(`${e.name}：${v.name}に${3+buff}ダメージ${v.side==='enemy'?'（敵を巻き込み）':''}`);if(v.hp<=0)logs.unshift(`${v.name}が戦闘不能`)});state.flashCells=[];return buff}return buff}
 async function enemyTurn(){if(state.phase!=='ally'||state.units.filter(u=>u.side==='ally'&&u.acted).length<4)return;state.phase='enemy';selected=null;mode='select';history=[];state.doneEnemies=[];phaseSub.textContent='敵が素早さ順に行動しています。';render();let buff=0;for(const intent of state.intents){buff=await executeIntent(intent,buff);state.doneEnemies.push(intent.enemyId);state.activeEnemy=null;render();await sleep(420);if(checkDefeat())return}if(state.turn>=state.maxTurns){defeat('制限ターン内に端末を起動できませんでした');return}state.turn++;state.phase='ally';state.walls=[];state.guards={};state.activeEnemy=null;state.doneEnemies=[];state.flashCells=[];state.units.forEach(u=>{if(u.side==='ally')u.acted=false;if(u.side==='enemy')u.cancelled=false});state.intents=makeIntents();history=[];actionStart=null;selected=null;mode='select';logs.unshift(`TURN ${state.turn}：新しい敵行動を観測`);guide.textContent='味方を選択してください。';render()}
 function undoLast(){if(selected){cancel();return}if(!history.length||state.phase!=='ally')return;state=history.pop();logs.shift();selected=null;mode='select';actionStart=null;guide.textContent='直前の味方行動を戻しました。';render()}
-function render(){renderBoard();renderPred();renderCommands();renderAllies();const n=state.units.filter(u=>u.side==='ally'&&u.acted).length;turnBadge.textContent=`TURN ${state.turn} / ${state.maxTurns}`;progressBadge.textContent=`${n} / 4 行動済み`;objectiveBadge.textContent=`端末 ${state.terminalProgress} / 2`;objectiveFill.style.width=`${state.terminalProgress*50}%`;enemyPhase.disabled=n<4||state.phase!=='ally';undo.disabled=(history.length===0&&!selected)||state.phase!=='ally';log.innerHTML=logs.length?logs.map(x=>`<div>・${x}</div>`).join(''):'まだ行動していません。';phaseBanner.classList.toggle('enemy',state.phase==='enemy');if(state.phase==='ally'){phaseText.textContent='味方フェイズ';phaseSub.textContent='敵の予告を見て、4人を自由な順番で行動させます。'}else if(state.phase==='enemy'){phaseText.textContent='敵フェイズ';phaseSub.textContent=state.activeEnemy?`${unit(state.activeEnemy)?.name||'敵'}が行動中`:'敵が素早さ順に行動しています。'}else if(state.phase==='win'){phaseText.textContent='作戦成功';phaseSub.textContent='制御端末を起動しました。'}else if(state.phase==='lose'){phaseText.textContent='作戦失敗';phaseSub.textContent='最初から再挑戦できます。'}}
+function render(){renderBoard();renderAllies();renderCommands();renderPred();const n=state.units.filter(u=>u.side==='ally'&&u.acted).length;turnBadge.textContent=`TURN ${state.turn} / ${state.maxTurns}`;progressBadge.textContent=`${n} / 4 行動済み`;objectiveBadge.textContent=`端末 ${state.terminalProgress} / 2`;objectiveFill.style.width=`${state.terminalProgress*50}%`;enemyPhase.disabled=n<4||state.phase!=='ally';undo.disabled=(history.length===0&&!selected)||state.phase!=='ally';log.innerHTML=logs.length?logs.map(x=>`<div>・${x}</div>`).join(''):'まだ行動していません。';phaseBanner.classList.toggle('enemy',state.phase==='enemy');if(state.phase==='ally'){phaseText.textContent='味方フェイズ';phaseSub.textContent='敵の予告を見て、4人を自由な順番で行動させます。'}else if(state.phase==='enemy'){phaseText.textContent='敵フェイズ';phaseSub.textContent=state.activeEnemy?`${unit(state.activeEnemy)?.name||'敵'}が行動中`:'敵が素早さ順に行動しています。'}else if(state.phase==='win'){phaseText.textContent='作戦成功';phaseSub.textContent='制御端末を起動しました。'}else if(state.phase==='lose'){phaseText.textContent='作戦失敗';phaseSub.textContent='最初から再挑戦できます。'}}
 enemyPhase.onclick=enemyTurn;$('reset').onclick=reset;undo.onclick=undoLast;reset();
 })();
 </script>
