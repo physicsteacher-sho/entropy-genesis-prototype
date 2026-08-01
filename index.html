@@ -234,7 +234,42 @@ button{font:inherit;color:inherit}
 .note b{color:var(--light);font-weight:600}
 .colophon{margin-top:22px;font-family:var(--font-data);font-size:10px;letter-spacing:.13em;color:var(--shade)}
 
-@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* ── 全画面リザルト ─────────────────── */
+.curtain{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:24px;
+  background:rgba(6,5,9,.82);backdrop-filter:blur(7px);animation:veil .32s ease-out}
+.curtain[hidden]{display:none}
+@keyframes veil{from{opacity:0}}
+.curtain::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(58% 44% at 50% 42%,rgba(111,208,189,.16),transparent 70%)}
+.curtain.fail::before{background:radial-gradient(58% 44% at 50% 42%,rgba(201,88,76,.16),transparent 70%)}
+.slate{position:relative;text-align:center;max-width:520px;width:100%}
+.slate .over{font-family:var(--font-data);font-size:10.5px;letter-spacing:.42em;text-transform:uppercase;
+  color:var(--dust);margin:0 0 20px;animation:rise .5s .05s both}
+.slate .big{margin:0;font-size:clamp(38px,7.6vw,62px);font-weight:600;letter-spacing:.19em;
+  line-height:1.06;text-indent:.19em;color:var(--core);animation:rise .5s .12s both}
+.curtain.fail .slate .big{color:var(--ember)}
+.stamp{display:flex;align-items:center;justify-content:center;gap:15px;margin:20px 0 0;
+  animation:rise .5s .22s both}
+.stamp span{font-family:var(--font-data);font-size:14px;letter-spacing:.5em;text-indent:.5em;color:var(--light)}
+.stamp i{flex:1;max-width:96px;height:1px;background:linear-gradient(90deg,transparent,var(--rule) 30%,var(--rule))}
+.stamp i:last-child{background:linear-gradient(270deg,transparent,var(--rule) 30%,var(--rule))}
+.slate .why{margin:24px 0 0;font-size:13.5px;color:var(--dust);line-height:1.75;animation:rise .5s .3s both}
+.tallies{display:flex;justify-content:center;gap:34px;margin:26px 0 0;animation:rise .5s .38s both}
+.tally{text-align:center}
+.tally b{display:block;font-family:var(--font-data);font-size:23px;font-weight:400;letter-spacing:.02em}
+.tally span{display:block;font-family:var(--font-data);font-size:9.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--shade);margin-top:5px}
+.slate .acts{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin:32px 0 0;
+  animation:rise .5s .46s both}
+.slate .acts .btn{min-width:132px;justify-content:center;text-align:center}
+@keyframes rise{from{opacity:0;transform:translateY(9px)}}
+@media(prefers-reduced-motion:reduce){
+  .curtain,.slate *{animation:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+  *{transition:none!important}
+  .curtain,.slate *,.pop{animation:none!important}
+}
 @media(max-width:880px){
   .stage{grid-template-columns:1fr}
   .wrap{padding:14px 12px 40px}
@@ -321,8 +356,19 @@ button{font:inherit;color:inherit}
     <span class="keys"><kbd>1</kbd>–<kbd>4</kbd> 味方　<kbd>Z</kbd> 1手戻す　<kbd>Enter</kbd> 実行　<kbd>Esc</kbd> 取消</span>
   </div>
 
-  <p class="colophon">Prototype v3 ／ deterministic resolver ／ 配色・数値は仮</p>
+  <p class="colophon">Prototype v4 ／ deterministic resolver ／ 配色・数値は仮</p>
 </main>
+
+<div id="curtain" class="curtain" hidden role="alertdialog" aria-modal="true" aria-labelledby="slateBig">
+  <div class="slate">
+    <p class="over" id="slateOver">Mission Complete</p>
+    <h2 class="big" id="slateBig">作戦成功</h2>
+    <div class="stamp"><i></i><span id="slateStamp">CLEAR</span><i></i></div>
+    <p class="why" id="slateWhy"></p>
+    <div class="tallies" id="slateTallies"></div>
+    <div class="acts" id="slateActs"></div>
+  </div>
+</div>
 
 <script>
 (() => {
@@ -510,6 +556,7 @@ function fresh(){
   journal = [];
   phaseTop = clone(S); lastPhaseTop = null;
   const v = document.getElementById('verdict'); v.hidden = true; v.className='verdict';
+  hideCurtain();
   setHint('動かす味方を選んでください。');
   draw();
 }
@@ -677,14 +724,46 @@ async function runEnemyPhase(){
 function finish(won,why){
   S.phase = won ? 'win' : 'lose';
   picked=null; mode='idle'; armed=false;
+
   const v = document.getElementById('verdict');
   v.hidden = false;
   v.className = 'verdict ' + (won?'win':'lose');
   v.innerHTML = `<p class="eyebrow" style="margin:0">${won?'Objective secured':'Observation failed'}</p>
     <h2>${won?'作戦成功':'作戦失敗'}</h2><p>${why}</p>`;
+
   say(why, won?'win':'hurt');
   draw();
+  showCurtain(won,why);
 }
+
+function showCurtain(won,why){
+  const c = document.getElementById('curtain');
+  c.className = 'curtain' + (won?'':' fail');
+  document.getElementById('slateOver').textContent = won ? 'Mission Complete' : 'Mission Failed';
+  document.getElementById('slateBig').textContent  = won ? '作戦成功' : '作戦失敗';
+  document.getElementById('slateStamp').textContent= won ? 'CLEAR' : 'FAILED';
+  document.getElementById('slateWhy').textContent  = why;
+
+  const alive = allies(S).length;
+  const tallies = [
+    ['ターン', `${S.turn} / ${MAX_TURN}`],
+    ['端末',   `${S.goalDone} / 2`],
+    ['生存',   `${alive} / 4`]
+  ];
+  document.getElementById('slateTallies').innerHTML =
+    tallies.map(([k,val]) => `<div class="tally"><b>${val}</b><span>${k}</span></div>`).join('');
+
+  const acts = document.getElementById('slateActs');
+  acts.innerHTML = '';
+  if(!won) acts.appendChild(mkBtn('このターンをやり直す', ()=>{ hideCurtain(); toTurnTop(); }, 'go'));
+  acts.appendChild(mkBtn('最初から', ()=>{ hideCurtain(); fresh(); }, won?'go':'ghost'));
+  acts.appendChild(mkBtn('盤面を確認する', hideCurtain, 'ghost'));
+
+  c.hidden = false;
+  const first = acts.querySelector('.btn');
+  if(first && first.focus) first.focus();
+}
+function hideCurtain(){ document.getElementById('curtain').hidden = true; }
 
 /* ══════════════════════════════════════════════
    戻す
@@ -721,6 +800,7 @@ function toTurnTop(){
   if(goingBack) lastPhaseTop = null;
   undoStack=[]; picked=null; mode='idle'; actionAnchor=null; armed=false;
   const v=document.getElementById('verdict'); v.hidden=true; v.className='verdict';
+  hideCurtain();
   say(`TURN ${S.turn} の開始時点へ戻した`, 'mark');
   setHint('ターン開始時点に戻しました。同じ盤面からやり直せます。');
   draw();
@@ -1093,6 +1173,7 @@ document.addEventListener('keydown',e=>{
   const k = e.key;
 
   if(k==='Escape'){
+    if(!document.getElementById('curtain').hidden){ hideCurtain(); e.preventDefault(); return; }
     if(!picked) return;
     if(AIMING.includes(mode)){ mode='menu'; setHint('行動を選んでください。'); draw(); }
     else revert();
