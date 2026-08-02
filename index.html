@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ENTROPY: GENESIS ／ 戦闘プロトタイプ v5.1</title>
+<title>ENTROPY: GENESIS ／ 戦闘プロトタイプ v5.3</title>
 <style>
 :root{
   /* 仮配色：冷えていく宇宙。残光＝金、敵の因果＝熾火、目標＝核 */
@@ -164,7 +164,8 @@ button{font:inherit;color:inherit}
 .tokenhp{position:absolute;left:12%;right:12%;bottom:4%;height:2px;background:#2a2833}
 .tokenhp i{display:block;height:100%;background:var(--helios)}
 .foehp i{background:var(--ember)}
-.key{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:11px;font-size:11px;color:var(--dust)}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:11px;font-size:11px;color:var(--dust);
+  flex-shrink:0}
 .key i{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px}
 .key .k-blast{background:rgba(201,88,76,.28);box-shadow:inset 0 0 0 1px rgba(201,88,76,.5)}
 .key .k-goal{box-shadow:inset 0 0 0 1px var(--core);background:rgba(111,208,189,.14)}
@@ -298,10 +299,10 @@ button{font:inherit;color:inherit}
 .panel.tip{font-size:11.5px;color:var(--dust);line-height:1.65}
 .panel.tip b{color:var(--light);font-weight:600}
 
-@media(min-width:881px) and (min-height:620px){
+@media(min-width:881px) and (min-height:500px){
   /* 盤面は8列×6行。画面の高さから幅を逆算し、全体幅もそれに合わせて詰める */
   :root{--boardw:max(330px, calc((100vh - 340px) * 4 / 3 + 44px))}
-  .wrap{width:min(1240px, 100%, calc(var(--boardw) + 382px));
+  .wrap{width:min(1240px, 100%, calc(var(--boardw) + var(--railgap, 382px)));
     height:100vh;display:flex;flex-direction:column;padding:14px 18px 12px}
   .masthead{padding-bottom:10px}
   .title{font-size:17px}
@@ -317,7 +318,8 @@ button{font:inherit;color:inherit}
 
   .stage{flex:1;min-height:0;gap:16px;grid-template-columns:minmax(0,1fr) 330px}
   .stage > div:first-child{display:flex;flex-direction:column;min-height:0}
-  .plotwrap{max-width:min(100%, var(--boardw));padding:9px}
+  .plotwrap{width:min(100%, var(--boardw));max-width:100%;padding:9px;align-self:flex-start}
+  .key{width:min(100%, var(--boardw))}
   .key{margin-top:8px;font-size:10.5px;gap:5px 13px}
   .rail{height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;
     gap:11px;padding-right:3px}
@@ -330,6 +332,28 @@ button{font:inherit;color:inherit}
   .dock{margin-top:11px;padding:9px 12px;gap:7px}
   .dock .btn{min-height:34px;padding:6px 11px;font-size:12px}
   .colophon{display:none}
+}
+
+/* 表示倍率が高い／画面が低い場合はさらに詰める */
+@media(min-width:881px) and (max-height:760px){
+  .wrap{padding:10px 16px 10px}
+  .masthead{padding-bottom:8px}
+  .title{font-size:15px}
+  .mission{display:none}
+  .turncount .n{font-size:24px}
+  .phasebar{margin:8px 0;padding:6px 11px}
+  .phasebar strong{font-size:13px}
+  .phasebar span{font-size:11.5px}
+  .roster{margin-bottom:8px;gap:7px}
+  .card{padding:7px 9px 8px}
+  .card .role{display:none}
+  .card .nm{font-size:12.5px}
+  .stage{gap:13px;grid-template-columns:minmax(0,1fr) 300px}
+  :root{--railgap:345px}
+  .key{margin-top:6px;font-size:10px}
+  .dock{margin-top:8px;padding:7px 10px}
+  .dock .btn{min-height:31px;padding:5px 9px;font-size:11.5px}
+  .keys{display:none}
 }
 
 @media(prefers-reduced-motion:reduce){
@@ -356,7 +380,7 @@ button{font:inherit;color:inherit}
   <header class="masthead">
     <div>
       <p class="eyebrow" style="margin:0">Observation Trial ／ Sector 6</p>
-      <h1 class="title">ENTROPY: <em>GENESIS</em> 戦闘プロトタイプ v5.1</h1>
+      <h1 class="title">ENTROPY: <em>GENESIS</em> 戦闘プロトタイプ v5.3</h1>
       <p class="mission">ミレアを制御端末まで運び、2回操作する。</p>
     </div>
     <div class="turncount">
@@ -423,7 +447,7 @@ button{font:inherit;color:inherit}
     <span class="keys"><kbd>1</kbd>–<kbd>4</kbd> 味方　<kbd>Z</kbd> 1手戻す　<kbd>Enter</kbd> 実行　<kbd>Esc</kbd> 取消</span>
   </div>
 
-  <p class="colophon">Prototype v5.1 ／ deterministic resolver ／ 配色・数値は仮</p>
+  <p class="colophon">Prototype v5.3 ／ deterministic resolver ／ 配色・数値は仮</p>
 </main>
 
 <div id="flash" class="flash" hidden aria-hidden="true">
@@ -734,7 +758,7 @@ function say(text,tone){
    CSSの見積もりに頼らず、実際に余っている高さから1マスの大きさを逆算する。 */
 function fitBoard(){
   const root = document.documentElement;
-  if(window.innerWidth < 881 || window.innerHeight < 620){
+  if(window.innerWidth < 881 || window.innerHeight < 500){
     root.style.removeProperty('--boardw');
     return;
   }
@@ -746,7 +770,7 @@ function fitBoard(){
   const cs   = getComputedStyle(box);
   const pad  = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 2;
   const keyH = key.offsetHeight + parseFloat(getComputedStyle(key).marginTop);
-  const avail = stage.clientHeight - keyH - pad;
+  const avail = stage.clientHeight - keyH - pad - 6;   // 端数と枠線ぶんの余裕
   if(!(avail > 120)) return;
 
   const cell = avail / H;                      // 6行が収まる1マスの高さ
