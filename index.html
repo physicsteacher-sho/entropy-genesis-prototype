@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ENTROPY: GENESIS ／ 戦闘プロトタイプ v5.3</title>
+<title>ENTROPY: GENESIS ／ 戦闘プロトタイプ v5.4</title>
 <style>
 :root{
   /* 仮配色：冷えていく宇宙。残光＝金、敵の因果＝熾火、目標＝核 */
@@ -316,8 +316,14 @@ button{font:inherit;color:inherit}
   .incoming{margin-top:4px;min-height:12px}
   .verdict{padding:12px 15px;margin-bottom:11px}
 
-  .stage{flex:1;min-height:0;gap:16px;grid-template-columns:minmax(0,1fr) 330px}
-  .stage > div:first-child{display:flex;flex-direction:column;min-height:0}
+  /* 既定は2カラム：味方カードを上段、盤面とレールを下段に置く */
+  .stage{flex:1;min-height:0;display:grid;gap:0 16px;
+    grid-template-columns:minmax(0,1fr) 330px;
+    grid-template-rows:auto minmax(0,1fr);
+    grid-template-areas:"roster roster" "board rail"}
+  .roster{grid-area:roster}
+  .boardcol{grid-area:board;display:flex;flex-direction:column;min-height:0}
+  .rail{grid-area:rail}
   .plotwrap{width:min(100%, var(--boardw));max-width:100%;padding:9px;align-self:flex-start}
   .key{width:min(100%, var(--boardw))}
   .key{margin-top:8px;font-size:10.5px;gap:5px 13px}
@@ -332,6 +338,21 @@ button{font:inherit;color:inherit}
   .dock{margin-top:11px;padding:9px 12px;gap:7px}
   .dock .btn{min-height:34px;padding:6px 11px;font-size:12px}
   .colophon{display:none}
+}
+
+/* 横幅に余裕があるときは味方カードを左列へ移し、盤面の縦を広げる */
+@media(min-width:1460px) and (min-height:500px){
+  :root{--railgap:660px}
+  .wrap{width:min(1760px, 100%, calc(var(--boardw) + var(--railgap)))}
+  .stage{gap:16px;
+    grid-template-columns:214px minmax(0,1fr) 376px;
+    grid-template-rows:minmax(0,1fr);
+    grid-template-areas:"roster board rail"}
+  .roster{grid-template-columns:minmax(0,1fr);align-content:start;margin-bottom:0;gap:9px}
+  .card{padding:11px 12px 12px}
+  .card .nm{font-size:14px}
+  .card .role{display:block;font-size:10.5px}
+  .incoming{font-size:10.5px}
 }
 
 /* 表示倍率が高い／画面が低い場合はさらに詰める */
@@ -380,7 +401,7 @@ button{font:inherit;color:inherit}
   <header class="masthead">
     <div>
       <p class="eyebrow" style="margin:0">Observation Trial ／ Sector 6</p>
-      <h1 class="title">ENTROPY: <em>GENESIS</em> 戦闘プロトタイプ v5.3</h1>
+      <h1 class="title">ENTROPY: <em>GENESIS</em> 戦闘プロトタイプ v5.4</h1>
       <p class="mission">ミレアを制御端末まで運び、2回操作する。</p>
     </div>
     <div class="turncount">
@@ -396,10 +417,10 @@ button{font:inherit;color:inherit}
     <span id="phaseNote">敵フェイズの結果は右に全部出ています。4人を好きな順に動かしてください。</span>
   </div>
 
-  <div id="roster" class="roster"></div>
-
   <div class="stage">
-    <div>
+    <div id="roster" class="roster"></div>
+
+    <div class="boardcol">
       <div class="plotwrap">
         <div id="plot" class="plot" aria-label="戦闘盤面 8×6"></div>
         <div id="pop" class="pop" role="dialog" aria-label="コマンド" hidden></div>
@@ -447,7 +468,7 @@ button{font:inherit;color:inherit}
     <span class="keys"><kbd>1</kbd>–<kbd>4</kbd> 味方　<kbd>Z</kbd> 1手戻す　<kbd>Enter</kbd> 実行　<kbd>Esc</kbd> 取消</span>
   </div>
 
-  <p class="colophon">Prototype v5.3 ／ deterministic resolver ／ 配色・数値は仮</p>
+  <p class="colophon">Prototype v5.4 ／ deterministic resolver ／ 配色・数値は仮</p>
 </main>
 
 <div id="flash" class="flash" hidden aria-hidden="true">
@@ -762,15 +783,18 @@ function fitBoard(){
     root.style.removeProperty('--boardw');
     return;
   }
-  const stage = document.querySelector('.stage');
+  const col  = document.querySelector('.boardcol');
   const key   = document.querySelector('.key');
   const box   = document.querySelector('.plotwrap');
-  if(!stage || !key || !box) return;
+  const dock  = document.querySelector('.dock');
+  if(!col || !key || !box || !dock) return;
 
   const cs   = getComputedStyle(box);
   const pad  = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 2;
   const keyH = key.offsetHeight + parseFloat(getComputedStyle(key).marginTop);
-  const avail = stage.clientHeight - keyH - pad - 6;   // 端数と枠線ぶんの余裕
+  const top  = col.getBoundingClientRect().top;
+  const bottom = dock.getBoundingClientRect().top - parseFloat(getComputedStyle(dock).marginTop);
+  const avail = bottom - top - keyH - pad - 6;   // 端数と枠線ぶんの余裕
   if(!(avail > 120)) return;
 
   const cell = avail / H;                      // 6行が収まる1マスの高さ
