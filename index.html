@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ENTROPY: GENESIS ／ 戦闘プロトタイプ v3</title>
+<title>ENTROPY: GENESIS ／ 戦闘プロトタイプ v5</title>
 <style>
 :root{
   /* 仮配色：冷えていく宇宙。残光＝金、敵の因果＝熾火、目標＝核 */
@@ -168,7 +168,17 @@ button{font:inherit;color:inherit}
 .key i{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px}
 .key .k-blast{background:rgba(201,88,76,.28);box-shadow:inset 0 0 0 1px rgba(201,88,76,.5)}
 .key .k-goal{box-shadow:inset 0 0 0 1px var(--core);background:rgba(111,208,189,.14)}
-.key .k-bar{background:repeating-linear-gradient(45deg,rgba(240,236,227,.55) 0 2px,transparent 2px 4px)}
+.lanemark{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(201,88,76,.17) 0 5px,transparent 5px 11px)}
+.lanemark::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;
+  background:rgba(201,88,76,.34)}
+.lanemark.tip{display:grid;place-items:center}
+.lanemark.tip span{position:relative;font-size:11px;color:var(--ember);line-height:1}
+.endmark{position:absolute;inset:11%;pointer-events:none;border:1px dashed var(--ember);
+  display:grid;place-items:center;font-family:var(--font-data);font-size:8px;
+  letter-spacing:.06em;color:var(--ember);background:rgba(201,88,76,.10)}
+.key .k-lane{background:repeating-linear-gradient(90deg,rgba(201,88,76,.4) 0 3px,transparent 3px 6px)}
+.key .k-end{box-shadow:inset 0 0 0 1px var(--ember);background:rgba(201,88,76,.14)}
 
 /* ── 右カラム ───────────────────────── */
 .rail{display:grid;gap:14px}
@@ -234,6 +244,24 @@ button{font:inherit;color:inherit}
 .note b{color:var(--light);font-weight:600}
 .colophon{margin-top:22px;font-family:var(--font-data);font-size:10px;letter-spacing:.13em;color:var(--shade)}
 
+/* ── フェイズ切替バナー ─────────────── */
+.flash{position:fixed;inset:0;z-index:110;display:grid;place-items:center;pointer-events:none}
+.flash[hidden]{display:none}
+.flash .band{position:relative;width:100%;padding:26px 24px;text-align:center;
+  background:linear-gradient(90deg,transparent,rgba(15,14,20,.94) 16%,rgba(15,14,20,.94) 84%,transparent);
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  animation:bandIn .26s ease-out both, bandOut .34s ease-in 1.12s both}
+.flash.ally .band{border-color:rgba(230,193,104,.45)}
+.flash.foe  .band{border-color:rgba(201,88,76,.55)}
+.fx-over{margin:0 0 9px;font-family:var(--font-data);font-size:10px;letter-spacing:.4em;
+  text-transform:uppercase;color:var(--dust)}
+.fx-name{margin:0;font-size:clamp(23px,4.4vw,34px);font-weight:600;letter-spacing:.3em;
+  text-indent:.3em;color:var(--helios)}
+.flash.foe .fx-name{color:var(--ember)}
+.fx-sub{margin:11px 0 0;font-size:12px;color:var(--dust);letter-spacing:.04em}
+@keyframes bandIn{from{opacity:0;transform:scaleX(.9)}}
+@keyframes bandOut{to{opacity:0}}
+
 /* ── 全画面リザルト ─────────────────── */
 .curtain{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:24px;
   background:rgba(6,5,9,.82);backdrop-filter:blur(7px);animation:veil .32s ease-out}
@@ -290,7 +318,7 @@ button{font:inherit;color:inherit}
   <header class="masthead">
     <div>
       <p class="eyebrow" style="margin:0">Observation Trial ／ Sector 6</p>
-      <h1 class="title">ENTROPY: <em>GENESIS</em> 戦闘プロトタイプ v3</h1>
+      <h1 class="title">ENTROPY: <em>GENESIS</em> 戦闘プロトタイプ v5</h1>
       <p class="mission">ミレアを制御端末まで運び、2回操作する。</p>
     </div>
     <div class="turncount">
@@ -316,6 +344,8 @@ button{font:inherit;color:inherit}
       </div>
       <div class="key">
         <span><i class="k-blast"></i>重砲の着弾予定</span>
+        <span><i class="k-lane"></i>衝角機の突進経路</span>
+        <span><i class="k-end"></i>突進の終点（吹き飛ばし）</span>
         <span><i class="k-goal"></i>制御端末</span>
         <span><i class="k-bar"></i>防壁</span>
         <span>○ 味方 ／ ⬔ 敵</span>
@@ -356,8 +386,16 @@ button{font:inherit;color:inherit}
     <span class="keys"><kbd>1</kbd>–<kbd>4</kbd> 味方　<kbd>Z</kbd> 1手戻す　<kbd>Enter</kbd> 実行　<kbd>Esc</kbd> 取消</span>
   </div>
 
-  <p class="colophon">Prototype v4 ／ deterministic resolver ／ 配色・数値は仮</p>
+  <p class="colophon">Prototype v5 ／ deterministic resolver ／ 配色・数値は仮</p>
 </main>
+
+<div id="flash" class="flash" hidden aria-hidden="true">
+  <div class="band">
+    <p class="fx-over" id="fxOver">Turn 1</p>
+    <p class="fx-name" id="fxName">味方フェイズ</p>
+    <p class="fx-sub" id="fxSub"></p>
+  </div>
+</div>
 
 <div id="curtain" class="curtain" hidden role="alertdialog" aria-modal="true" aria-labelledby="slateBig">
   <div class="slate">
@@ -386,10 +424,11 @@ const ROSTER = [
   {id:'m', side:'ally', name:'ミレア',   mark:'ミ', role:'装置・防壁',   x:0,y:3, hp:7,  max:7,  move:3},
   {id:'v', side:'ally', name:'ヴァルグ', mark:'ヴ', role:'防御・護衛',   x:1,y:3, hp:10, max:10, move:2},
   {id:'l', side:'ally', name:'レヴ',     mark:'レヴ',role:'高機動・中断', x:2,y:4, hp:6,  max:6,  move:4},
-  {id:'e1',side:'enemy',name:'突撃兵A',  mark:'突', role:'',            x:5,y:2, hp:5,  max:5,  spd:7},
+  {id:'e1',side:'enemy',name:'突撃兵A',  mark:'突', role:'',            x:5,y:1, hp:5,  max:5,  spd:7},
   {id:'e2',side:'enemy',name:'重砲ドローン',mark:'砲',role:'',           x:7,y:0, hp:6,  max:6,  spd:3},
   {id:'e3',side:'enemy',name:'狙撃兵',   mark:'狙', role:'',            x:7,y:3, hp:5,  max:5,  spd:6},
-  {id:'e4',side:'enemy',name:'指揮官',   mark:'指', role:'',            x:6,y:5, hp:7,  max:7,  spd:9}
+  {id:'e4',side:'enemy',name:'指揮官',   mark:'指', role:'',            x:6,y:5, hp:7,  max:7,  spd:9},
+  {id:'e5',side:'enemy',name:'衝角機',   mark:'衝', role:'',            x:7,y:2, hp:7,  max:7,  spd:2}
 ];
 const NAME = Object.fromEntries(ROSTER.map(u => [u.id, u.name]));
 
@@ -398,7 +437,8 @@ const RULE = {
   e4:{tag:'全体強化型', how:'対象を選ばない。以降に行動する敵すべての攻撃力を+1する。'},
   e1:{tag:'固定対象型', how:'ターン開始時に対象を確定。最大2マス接近し、隣接していれば攻撃する。'},
   e3:{tag:'条件対象型', how:'同じ縦か横の直線上にいる味方のうちHPが最も低い者。同値なら近い方、それも同値なら部隊順。防壁で射線を切れる。'},
-  e2:{tag:'固定地点型', how:'味方の位置に関係なく、予告された座標を3×3で砲撃する。敵味方を問わず巻き込む。護衛は成立しない。'}
+  e2:{tag:'固定地点型', how:'味方の位置に関係なく、予告された座標を3×3で砲撃する。敵味方を問わず巻き込む。護衛は成立しない。'},
+  e5:{tag:'経路貫通型', how:'味方フェイズ開始時に経路と終点を確定。経路上の味方・敵をすべて貫通して巻き込み、終点まで進む。防壁は貫通するが破壊される。終点にいた者は突進方向へ1マス吹き飛ばされる。その先が塞がっていれば吹き飛ばず、双方が衝突ダメージを受け、衝角機は1マス手前で停止する。経路は介入では変わらず、押し引きも受けない。護衛は成立しない。'}
 };
 
 /* ══════════════════════════════════════════════
@@ -418,6 +458,10 @@ const blocked = (x,y,s,skip) =>
   s.units.some(u => u.hp>0 && u.id!==skip && u.x===x && u.y===y) ||
   s.walls.some(w => w.x===x && w.y===y);
 
+/* 突進の終点にいたユニットは、突進方向へ1マスだけ吹き飛ばされる。
+   その先が塞がっていれば吹き飛ばしは起こらず、衝突が発生する。上下への迂回はしない。 */
+const CRASH = 2;
+
 function blastCenter(turn){
   return turn===1 ? {x:4,y:2} : turn===2 ? {x:5,y:3} : {x:5,y:4};
 }
@@ -426,14 +470,40 @@ function blastCells(turn){
   for(let y=c.y-1;y<=c.y+1;y++) for(let x=c.x-1;x<=c.x+1;x++) if(inside(x,y)) out.push(kx(x,y));
   return out;
 }
-function buildIntents(turn){
-  const fixed = turn===1 ? 'r' : 'm';
-  return [
+/* 衝角機：同じ行を、盤面の反対側へ突進する。
+   経路と終点は味方フェイズ開始時に確定し、以後の介入では変わらない。 */
+function chargePlan(s){
+  const c = s.units.find(u => u.id==='e5' && u.hp>0);
+  if(!c) return null;
+  const endX = c.x > 3 ? 1 : 6;
+  const dir = Math.sign(endX - c.x);
+  if(!dir) return null;
+  const path = [];
+  for(let x=c.x+dir; ; x+=dir){
+    path.push({x, y:c.y});
+    if(x===endX) break;
+  }
+  return {from:{x:c.x,y:c.y}, end:{x:endX,y:c.y}, dir, path};
+}
+
+function buildIntents(s){
+  const fixed = s.turn===1 ? 'r' : 'm';
+  const list = [
     {eid:'e4', type:'boost',     spd:9},
     {eid:'e1', type:'assault',   spd:7, targetId:fixed},
     {eid:'e3', type:'snipe',     spd:6},
     {eid:'e2', type:'artillery', spd:3}
-  ].sort((a,b) => b.spd - a.spd);
+  ];
+  const plan = chargePlan(s);
+  if(plan) list.push({eid:'e5', type:'charge', spd:2, path:plan.path, end:plan.end, dir:plan.dir, from:plan.from});
+  return list.sort((a,b) => b.spd - a.spd);
+}
+
+/* 突進の終点は予約マス。味方も他の敵もそこで行動を終了できない。 */
+function refreshIntents(s){
+  s.intents = buildIntents(s);
+  const ch = s.intents.find(i => i.type==='charge');
+  s.reserved = ch ? ch.end : null;
 }
 
 /* 射線：同一行または同一列。防壁のみが遮る（ユニットは遮らない＝仮置き） */
@@ -525,6 +595,62 @@ function resolveEnemyPhase(base){
       continue;
     }
 
+    if(it.type==='charge'){
+      const onPath = (x,y) => it.path.some(p => p.x===x && p.y===y);
+
+      /* 防壁は貫通するが破壊される */
+      const broke = [];
+      s.walls = s.walls.filter(w => {
+        if(onPath(w.x,w.y)){ broke.push(coord(w.x,w.y)); return false; }
+        return true;
+      });
+
+      /* 経路上のすべてを貫通。開始地点から終点へ向かう順に処理する（固定処理順） */
+      const list = [];
+      for(const p of it.path){
+        const victim = s.units.find(u => u.hp>0 && u.id!==foe.id && u.x===p.x && u.y===p.y);
+        if(!victim) continue;
+        victim.hp -= 4+boost;
+        list.push({id:victim.id, name:victim.name, side:victim.side,
+                   at:coord(p.x,p.y), down:victim.hp<=0});
+      }
+
+      /* 終点に生存者がいれば突進方向へ1マス吹き飛ばす。
+         その先が塞がっていれば衝突。衝角機は1マス手前で停止する。 */
+      let stop = it.end, knock = null, crash = null;
+      const stuck = s.units.find(u => u.hp>0 && u.id!==foe.id && u.x===it.end.x && u.y===it.end.y);
+      if(stuck){
+        const dest = {x:it.end.x+it.dir, y:it.end.y};
+        const onBoard = inside(dest.x,dest.y);
+        const wallThere = s.walls.find(w => w.x===dest.x && w.y===dest.y);
+        const unitThere = onBoard
+          ? s.units.find(u => u.hp>0 && u.id!==stuck.id && u.x===dest.x && u.y===dest.y) : null;
+
+        if(onBoard && !wallThere && !unitThere){
+          stuck.x = dest.x; stuck.y = dest.y;
+          knock = {name:stuck.name, side:stuck.side, to:coord(dest.x,dest.y)};
+        }else{
+          stuck.hp -= CRASH;
+          crash = {at:coord(dest.x,dest.y),
+                   a:{name:stuck.name, side:stuck.side, down:stuck.hp<=0}, b:null, wall:false};
+          if(unitThere){
+            unitThere.hp -= CRASH;
+            crash.b = {name:unitThere.name, side:unitThere.side, down:unitThere.hp<=0};
+          }else if(wallThere){
+            s.walls = s.walls.filter(w => w!==wallThere);
+            crash.wall = true;
+            broke.push(coord(dest.x,dest.y));
+          }
+          stop = it.path.length>=2 ? it.path[it.path.length-2] : it.from;
+        }
+      }
+      foe.x = stop.x; foe.y = stop.y;
+
+      beat({eid:it.eid, kind:'charge', list, knock, crash, broke, amount:4+boost, boost,
+            path:it.path, at:coord(stop.x,stop.y), planned:coord(it.end.x,it.end.y)});
+      continue;
+    }
+
     if(it.type==='artillery'){
       const cells = blastCells(s.turn);
       const caught = s.units.filter(u => u.hp>0 && cells.includes(kx(u.x,u.y)));
@@ -549,22 +675,42 @@ function fresh(){
     units: clone(ROSTER),
     walls: [], guards: {},
     phase:'ally', turn:1, goalDone:0,
-    intents: buildIntents(1),
+    intents: [], reserved:null,
     activeFoe:null, resolvedFoes:[], impact:[]
   };
+  refreshIntents(S);
   undoStack = []; picked=null; mode='idle'; actionAnchor=null; armed=false;
   journal = [];
   phaseTop = clone(S); lastPhaseTop = null;
   const v = document.getElementById('verdict'); v.hidden = true; v.className='verdict';
-  hideCurtain();
+  hideCurtain(); hideFlash();
   setHint('動かす味方を選んでください。');
   draw();
+  flashPhase('ally', `Turn ${S.turn}`, '味方フェイズ', '4人を好きな順に動かせます', 1500);
 }
 
 function say(text,tone){
   journal.unshift({text, tone, turn:S.turn});
   if(journal.length > 60) journal.pop();
 }
+let flashTimer = null;
+function flashPhase(kind, over, name, sub, ms){
+  const f = document.getElementById('flash');
+  f.className = 'flash ' + kind;
+  document.getElementById('fxOver').textContent = over;
+  document.getElementById('fxName').textContent = name;
+  document.getElementById('fxSub').textContent  = sub || '';
+  f.hidden = false;
+  const band = f.querySelector('.band');   // アニメーションを再生し直す
+  band.style.animation = 'none';
+  void band.offsetWidth;
+  band.style.animation = '';
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>{ f.hidden = true; }, ms);
+  return nap(ms);
+}
+function hideFlash(){ clearTimeout(flashTimer); document.getElementById('flash').hidden = true; }
+
 let hintText = '';
 function setHint(t){ hintText = t; }
 
@@ -609,7 +755,7 @@ function aimable(){
   const a = live(picked,S);
   if(!a) return [];
   if(mode==='strike'||mode==='break') return foes(S).filter(e=>dist(a,e)===1).map(e=>kx(e.x,e.y));
-  if(mode==='pull')  return foes(S).filter(e=>dist(a,e)<=4).map(e=>kx(e.x,e.y));
+  if(mode==='pull')  return foes(S).filter(e=>dist(a,e)<=4 && e.id!=='e5').map(e=>kx(e.x,e.y));
   if(mode==='guard') return allies(S).filter(u=>u.id!==a.id && dist(a,u)<=3).map(u=>kx(u.x,u.y));
   if(mode==='wall'){
     const out=[];
@@ -676,7 +822,8 @@ async function runEnemyPhase(){
   S.phase='enemy'; picked=null; mode='idle'; armed=false;
   S.resolvedFoes=[]; undoStack=[];
   draw();
-  await nap(360);
+  await flashPhase('foe', `Turn ${S.turn}`, '敵フェイズ', '素早さ順に処理します', 1500);
+  await nap(220);
 
   for(const b of beats){
     S = b.snap;
@@ -712,13 +859,16 @@ async function runEnemyPhase(){
   S.phase='ally';
   S.walls=[]; S.guards={}; S.activeFoe=null; S.resolvedFoes=[]; S.impact=[];
   S.units.forEach(u => { if(u.side==='ally') u.acted=false; else u.halted=false; });
-  S.intents = buildIntents(S.turn);
+  S.intents = buildIntents(S);
+  refreshIntents(S);
   undoStack=[]; actionAnchor=null; picked=null; mode='idle';
   lastPhaseTop = phaseTop;
   phaseTop = clone(S);
   say(`TURN ${S.turn} ／ 新しい敵行動を観測`, 'mark');
   setHint('動かす味方を選んでください。');
   draw();
+  flashPhase('ally', `Turn ${S.turn}`, '味方フェイズ',
+    S.turn===MAX_TURN ? '最終ターン' : '新しい敵行動を観測しました', 1500);
 }
 
 function finish(won,why){
@@ -732,6 +882,7 @@ function finish(won,why){
     <h2>${won?'作戦成功':'作戦失敗'}</h2><p>${why}</p>`;
 
   say(why, won?'win':'hurt');
+  hideFlash();
   draw();
   showCurtain(won,why);
 }
@@ -804,6 +955,7 @@ function toTurnTop(){
   say(`TURN ${S.turn} の開始時点へ戻した`, 'mark');
   setHint('ターン開始時点に戻しました。同じ盤面からやり直せます。');
   draw();
+  flashPhase('ally', `Turn ${S.turn}`, '味方フェイズ', '観測をやり直します', 1500);
 }
 
 /* ══════════════════════════════════════════════
@@ -818,6 +970,17 @@ function describe(b,past){
   if(b.kind==='hit'){
     const h=b.hit;
     return `${who}：${h.taker}に${h.amount}${h.guarded?`（${h.target}を護衛）`:''}${h.down?'／戦闘不能':''}`;
+  }
+  if(b.kind==='charge'){
+    const parts = b.list.map(v =>
+      `${v.name}に${b.amount}${v.side==='enemy'?'（巻き込み）':''}${v.down?'・撃破':''}`);
+    if(b.broke.length) parts.push(`防壁${b.broke.join('・')}を破壊`);
+    if(b.knock) parts.push(`${b.knock.name}を${b.knock.to}へ吹き飛ばす`);
+    if(b.crash){
+      const who2 = b.crash.b ? `${b.crash.a.name}と${b.crash.b.name}` : b.crash.a.name;
+      parts.push(`${b.crash.at}が塞がり衝突／${who2}に${CRASH}`);
+    }
+    return `${who}：${b.at}まで突進` + (parts.length ? '／'+parts.join('、') : '／接触なし');
   }
   if(b.kind==='blast'){
     if(!b.list.length) return `${who}：${b.at}を砲撃／命中なし`;
@@ -838,6 +1001,23 @@ function outcomeHTML(b){
     return `${h.guarded?`<span class="good">${h.taker}が肩代わり</span>／`:''}` +
            `<b>${h.taker}</b> <span class="dmg">−${h.amount}</span>` +
            `${h.down?' <span class="dmg">／戦闘不能</span>':''}`;
+  }
+  if(b.kind==='charge'){
+    let html = `${b.planned} まで貫通突進 <span class="dmg">-${b.amount}</span>`;
+    if(b.at !== b.planned) html += ` <span class="nil">（${b.at}で停止）</span>`;
+    const rows = [];
+    if(b.list.length) rows.push(b.list.map(v => v.side==='enemy'
+      ? `<span class="good">${v.name}（${v.at}で巻き込み${v.down?'・撃破':''}）</span>`
+      : `<b>${v.name}</b>（${v.at}）${v.down?' <span class="dmg">／戦闘不能</span>':''}`).join('、'));
+    if(b.broke.length) rows.push(`<span class="nil">防壁 ${b.broke.join('・')} を破壊</span>`);
+    if(b.knock) rows.push(`<b>${b.knock.name}</b>を <span class="dmg">${b.knock.to}</span> へ吹き飛ばす`);
+    if(b.crash){
+      const tag = o => `<b>${o.name}</b> <span class="dmg">-${CRASH}</span>${o.down?' <span class="dmg">／戦闘不能</span>':''}`;
+      rows.push(`<span class="good">${b.crash.at}が塞がり衝突・突進停止</span>`);
+      rows.push(b.crash.b ? `${tag(b.crash.a)}、${tag(b.crash.b)}` : tag(b.crash.a));
+    }
+    if(!rows.length) rows.push('<span class="nil">経路上に対象なし</span>');
+    return html + '<br>' + rows.join('<br>');
   }
   if(b.kind==='blast'){
     if(!b.list.length) return `${b.at} を砲撃／<span class="good">命中なし</span>`;
@@ -945,6 +1125,8 @@ function drawPlot(){
   const aims  = (actor && ['strike','pull','wall','guard','break'].includes(mode)) ? aimable() : [];
   const zone  = blastCells(S.turn);
   const ctr   = blastCenter(S.turn);
+  const charge = S.intents.find(i => i.type==='charge');
+  const lane = charge ? charge.path.map(p => kx(p.x,p.y)) : [];
 
   const corner = document.createElement('div');
   corner.className='axis'; plot.appendChild(corner);
@@ -965,6 +1147,22 @@ function drawPlot(){
       if(S.walls.some(w=>w.x===x&&w.y===y)) c.classList.add('barrier');
       if(reach.includes(id)||aims.includes(id)||(mode==='idle'&&S.units.some(u=>u.hp>0&&u.side==='ally'&&u.x===x&&u.y===y)))
         c.classList.add('pick');
+
+      if(lane.includes(id)){
+        const lm=document.createElement('div');
+        lm.className='lanemark';
+        const isEnd = charge && charge.end.x===x && charge.end.y===y;
+        if(isEnd){
+          lm.classList.add('tip');
+          lm.innerHTML = `<span>${charge.dir<0?'◀':'▶'}</span>`;
+        }
+        c.appendChild(lm);
+        if(isEnd){
+          const em=document.createElement('div');
+          em.className='endmark'; em.textContent='終';
+          c.appendChild(em);
+        }
+      }
 
       if(x===GOAL.x && y===GOAL.y){
         const g=document.createElement('div');
@@ -1091,7 +1289,7 @@ function drawPop(){
     },'go'));
   }
   if(a.id==='r'){
-    const b=mkBtn('重力牽引', arm('pull','4マス以内の敵を選択。レクト側へ1マス引き寄せます。'),'key-act');
+    const b=mkBtn('重力牽引', arm('pull','4マス以内の敵を選択。レクト側へ1マス引き寄せます。衝角機は突進固定のため対象外。'),'key-act');
     b.disabled = !foes(S).some(e=>dist(a,e)<=4); set.appendChild(b);
   }
   if(a.id==='m'){
