@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ENTROPY: GENESIS ／ 戦闘プロトタイプ v5</title>
+<title>ENTROPY: GENESIS ／ 戦闘プロトタイプ v5.1</title>
 <style>
 :root{
   /* 仮配色：冷えていく宇宙。残光＝金、敵の因果＝熾火、目標＝核 */
@@ -356,7 +356,7 @@ button{font:inherit;color:inherit}
   <header class="masthead">
     <div>
       <p class="eyebrow" style="margin:0">Observation Trial ／ Sector 6</p>
-      <h1 class="title">ENTROPY: <em>GENESIS</em> 戦闘プロトタイプ v5</h1>
+      <h1 class="title">ENTROPY: <em>GENESIS</em> 戦闘プロトタイプ v5.1</h1>
       <p class="mission">ミレアを制御端末まで運び、2回操作する。</p>
     </div>
     <div class="turncount">
@@ -423,7 +423,7 @@ button{font:inherit;color:inherit}
     <span class="keys"><kbd>1</kbd>–<kbd>4</kbd> 味方　<kbd>Z</kbd> 1手戻す　<kbd>Enter</kbd> 実行　<kbd>Esc</kbd> 取消</span>
   </div>
 
-  <p class="colophon">Prototype v5 ／ deterministic resolver ／ 配色・数値は仮</p>
+  <p class="colophon">Prototype v5.1 ／ deterministic resolver ／ 配色・数値は仮</p>
 </main>
 
 <div id="flash" class="flash" hidden aria-hidden="true">
@@ -730,6 +730,39 @@ function say(text,tone){
   journal.unshift({text, tone, turn:S.turn});
   if(journal.length > 60) journal.pop();
 }
+/* 盤面サイズを実測で決める。
+   CSSの見積もりに頼らず、実際に余っている高さから1マスの大きさを逆算する。 */
+function fitBoard(){
+  const root = document.documentElement;
+  if(window.innerWidth < 881 || window.innerHeight < 620){
+    root.style.removeProperty('--boardw');
+    return;
+  }
+  const stage = document.querySelector('.stage');
+  const key   = document.querySelector('.key');
+  const box   = document.querySelector('.plotwrap');
+  if(!stage || !key || !box) return;
+
+  const cs   = getComputedStyle(box);
+  const pad  = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 2;
+  const keyH = key.offsetHeight + parseFloat(getComputedStyle(key).marginTop);
+  const avail = stage.clientHeight - keyH - pad;
+  if(!(avail > 120)) return;
+
+  const cell = avail / H;                      // 6行が収まる1マスの高さ
+  const w = cell * W + 20 + pad;               // 8列＋座標ラベル＋余白
+  root.style.setProperty('--boardw', Math.round(Math.max(300, w)) + 'px');
+}
+let fitPending = false;
+function scheduleFit(){
+  if(fitPending) return;
+  fitPending = true;
+  requestAnimationFrame(()=>{
+    fitBoard();
+    requestAnimationFrame(()=>{ fitBoard(); fitPending = false; });  // 幅変化ぶんを再計算
+  });
+}
+
 let flashTimer = null;
 function flashPhase(kind, over, name, sub, ms){
   const f = document.getElementById('flash');
@@ -1397,6 +1430,7 @@ document.getElementById('btnTurnTop').addEventListener('click',toTurnTop);
 document.getElementById('btnRestart').addEventListener('click',fresh);
 
 window.addEventListener('resize',()=>{
+  scheduleFit();
   if(S && S.phase==='ally' && picked && mode==='menu'){
     const a = live(picked,S);
     if(a) placePop(a);
@@ -1431,6 +1465,8 @@ document.addEventListener('keydown',e=>{
 });
 
 fresh();
+scheduleFit();
+window.addEventListener('load', scheduleFit);
 })();
 </script>
 </body>
