@@ -272,11 +272,11 @@ button{font:inherit;color:inherit}
 /* ── 全画面リザルト ─────────────────── */
 .curtain{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:24px;
   background:rgba(6,5,9,.82);backdrop-filter:blur(7px);animation:veil .32s ease-out}
-.curtain[hidden]{display:none}
+.curtain[hidden]{display:none !important}
 
 /* 開始画面は内容が縦に長いので、中央寄せではなくスクロール領域として扱う。
    place-items:center のままだと、はみ出した分が上下に切れて届かなくなる。 */
-.curtain.brief{
+.curtain.brief:not([hidden]){
   display:block; place-items:initial; padding:0;
   height:100vh; height:100dvh;          /* iOSのアドレスバー分を吸収する */
   overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
