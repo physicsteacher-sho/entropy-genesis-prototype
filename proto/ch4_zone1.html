@@ -268,6 +268,20 @@ button{font:inherit;color:inherit}
 .curtain{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:24px;
   background:rgba(6,5,9,.82);backdrop-filter:blur(7px);animation:veil .32s ease-out}
 .curtain[hidden]{display:none}
+.slate.wide{max-width:560px;text-align:left}
+.slate.wide .over,.slate.wide .big{text-align:center}
+.bsec{margin:14px 0 0}
+.bsec h3{margin:0 0 5px;font-size:11px;letter-spacing:.16em;color:var(--dust);font-weight:600}
+.blead{margin:0 0 4px;font-size:15px;line-height:1.6;color:var(--light)}
+.bnote{margin:0;font-size:12px;line-height:1.6;color:var(--dust)}
+.blist{margin:0;padding-left:1.1em;font-size:12.5px;line-height:1.75;color:var(--light)}
+.blist li{margin:1px 0}
+.bfoot{margin:16px 0 0;padding-top:11px;border-top:1px solid var(--rule-soft);
+  font-size:11.5px;line-height:1.6;color:var(--dust);text-align:center}
+.c-ally{color:var(--helios)} .c-foe{color:var(--ember)}
+.c-site{color:var(--core)}  .c-watch{color:var(--watch)}
+.brief .acts{justify-content:center;margin-top:16px}
+.brief .btn.go{min-width:180px;letter-spacing:.2em}
 @keyframes veil{from{opacity:0}}
 .curtain::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(58% 44% at 50% 42%,rgba(111,208,189,.16),transparent 70%)}
@@ -506,7 +520,7 @@ button{font:inherit;color:inherit}
       </section>
 
       <section class="panel tip">
-        <b>警戒圏は立入禁止ではありません。</b>むしろ入るのが手です。<b>「誘」</b>のマスは、移動できて、かつ入れば保全機の対象がその味方へ変わります。<b>圏内に立つのは移動だけで済むので、行動は別のことに使えます。</b>代償は毎ターン3の被弾です。<br>ほかに3つの手があります。<b>防壁</b>は指定した次のターンに実体化するため、1ターン先を読んで置く必要があります。<b>ブレイク</b>は中断できますが、その敵に耐性がつき次のターンは使えません。<b>重力牽引</b>は即時ですが、保全機は揃っていないと1マス移動して揃え直すので1ターンしか稼げません。ほかに、防壁で射線を遮る／レヴのブレイクで中断する／レクトの重力牽引で保全機を動かして射線をずらす、という手もあります。撃たれる味方は毎ターン3受けるので、誰に受けさせるかを配り直してください。
+保全機は、警戒圏に味方がいればその味方を撃ち、いなければ割り当てられた施設を撃ちます。施設を撃つには同じ行または列にいる必要があり、揃っていなければ1マス移動して揃え直します。<br><b>「誘」</b>のマスは、移動でき、かつ入れば保全機の対象がその味方へ変わるマスです。<br>能力は、防壁が指定した次のターンに実体化、ブレイクは中断できるが対象に耐性がつく、重力牽引は即時、という違いがあります。ほかに、防壁で射線を遮る／レヴのブレイクで中断する／レクトの重力牽引で保全機を動かして射線をずらす、という手もあります。撃たれる味方は毎ターン3受けるので、誰に受けさせるかを配り直してください。
       </section>
     </aside>
   </div>
@@ -530,6 +544,51 @@ button{font:inherit;color:inherit}
     <p class="fx-over" id="fxOver">Turn 1</p>
     <p class="fx-name" id="fxName">味方フェイズ</p>
     <p class="fx-sub" id="fxSub"></p>
+  </div>
+</div>
+
+<div id="brief" class="curtain brief" role="dialog" aria-modal="true" aria-labelledby="briefTitle">
+  <div class="slate wide">
+    <p class="over">第4章 第一区画 ／ 覚醒処置区画</p>
+    <h2 class="big" id="briefTitle">作戦目標</h2>
+
+    <div class="bsec">
+      <p class="blead">覚醒安定装置と電力供給端末を、<b>3ターン</b>守り抜く。</p>
+      <p class="bnote">どちらか一方でも構造耐久値が0になれば失敗。<b>敵を全滅させる必要はない。</b></p>
+    </div>
+
+    <div class="bsec">
+      <h3>盤面の見かた</h3>
+      <ul class="blist">
+        <li><b class="c-ally">金の丸</b>＝味方（4人）</li>
+        <li><b class="c-foe">赤の角形</b>＝保全機（敵）</li>
+        <li><b class="c-site">青緑の四角</b>＝守る施設（装置・端末）</li>
+        <li><b class="c-watch">紫の枠</b>＝保全機の警戒圏</li>
+      </ul>
+    </div>
+
+    <div class="bsec">
+      <h3>保全機の動き</h3>
+      <ul class="blist">
+        <li>警戒圏に味方がいれば、その中で<b>最も近い味方</b>を撃つ（同距離なら部隊順）</li>
+        <li>いなければ、<b>割り当てられた施設</b>を撃つ</li>
+        <li>施設を撃つには、同じ行または列にいる必要がある</li>
+        <li>行も列も揃っていなければ、<b>1マス移動して揃え直す</b>（そのフェイズは撃たない）</li>
+      </ul>
+    </div>
+
+    <div class="bsec">
+      <h3>味方の能力</h3>
+      <ul class="blist">
+        <li><b>レクト／重力牽引</b>：4マス以内の敵を1マス引き寄せる</li>
+        <li><b>ミレア／防壁</b>：指定した<b>次のターン</b>に実体化し、射線を遮る</li>
+        <li><b>ヴァルグ／護衛指定</b>：味方への次の単体攻撃を肩代わりする</li>
+        <li><b>レヴ／ブレイク</b>：予告行動を中断する。その敵には耐性がつき、次ターンは使えない</li>
+      </ul>
+    </div>
+
+    <p class="bfoot">次の敵フェイズに起きることは、すべて右側に表示されます。やり直しは何度でもできます。</p>
+    <div class="acts"><button id="btnStart" class="btn go" type="button">START</button></div>
   </div>
 </div>
 
@@ -771,7 +830,7 @@ function resolveEnemyPhase(base){
    ══════════════════════════════════════════════ */
 let S, undoStack, phaseTop, lastPhaseTop, picked, mode, actionAnchor, journal, armed;
 
-function fresh(){
+function fresh(quiet){
   S = {
     units: clone(ROSTER),
     walls: [], guards: {},
@@ -786,9 +845,9 @@ function fresh(){
   phaseTop = clone(S); lastPhaseTop = null;
   const v = document.getElementById('verdict'); v.hidden = true; v.className='verdict';
   hideCurtain(); hideFlash();
-  setHint('動かす味方を選んでください。「誘」のマスへ入ると、保全機の対象が装置からその味方へ変わります。');
+  setHint('動かす味方を選んでください。');
   draw();
-  flashPhase('ally', `Turn ${S.turn}`, '味方フェイズ', '警戒圏は入れます。入ると対象が変わります', 1800);
+  if(!quiet) flashPhase('ally', `Turn ${S.turn}`, '味方フェイズ', '装置と端末を3ターン守る', 1600);
 }
 
 function say(text,tone){
@@ -1546,7 +1605,10 @@ document.getElementById('btnCommit').addEventListener('click',()=>{
 document.getElementById('btnUndo').addEventListener('click',undoOne);
 document.getElementById('btnPhaseTop').addEventListener('click',toPhaseTop);
 document.getElementById('btnTurnTop').addEventListener('click',toTurnTop);
-document.getElementById('btnRestart').addEventListener('click',()=>fresh());
+document.getElementById('btnRestart').addEventListener('click',()=>{
+  document.getElementById('brief').hidden = false;
+  fresh(true);
+});
 
 
 window.addEventListener('resize',()=>{
@@ -1584,7 +1646,12 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-fresh();
+document.getElementById('btnStart').addEventListener('click', ()=>{
+  document.getElementById('brief').hidden = true;
+  fresh();
+});
+/* ブリーフィングを閉じるまで開始演出を出さない。盤面の表示だけ先に用意する。 */
+fresh(true);
 scheduleFit();
 window.addEventListener('load', scheduleFit);
 })();
