@@ -268,8 +268,17 @@ button{font:inherit;color:inherit}
 .curtain{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:24px;
   background:rgba(6,5,9,.82);backdrop-filter:blur(7px);animation:veil .32s ease-out}
 .curtain[hidden]{display:none}
-.slate.wide{max-width:560px;text-align:left}
+.slate.wide{max-width:580px;text-align:left}
 .slate.wide .over,.slate.wide .big{text-align:center}
+.goalbox{margin:14px 0 0;padding:18px 20px 15px;border:1px solid var(--helios);
+  border-radius:5px;background:rgba(230,193,104,.06);text-align:center}
+.goaltext{margin:0;font-size:23px;line-height:1.5;letter-spacing:.01em;
+  color:var(--light);font-weight:600}
+.goaltext em{font-style:normal;color:var(--helios)}
+.goalsub{margin:11px 0 0;padding-top:10px;border-top:1px solid rgba(230,193,104,.28);
+  font-size:12.5px;line-height:1.75;color:var(--dust)}
+.goalsub .fail{color:var(--ember);font-weight:600}
+@media (max-width:640px){ .goaltext{font-size:18px} .goalbox{padding:14px 14px 12px} }
 .bsec{margin:14px 0 0}
 .bsec h3{margin:0 0 5px;font-size:11px;letter-spacing:.16em;color:var(--dust);font-weight:600}
 .blead{margin:0 0 4px;font-size:15px;line-height:1.6;color:var(--light)}
@@ -552,9 +561,9 @@ button{font:inherit;color:inherit}
     <p class="over">第4章 第一区画 ／ 覚醒処置区画</p>
     <h2 class="big" id="briefTitle">作戦目標</h2>
 
-    <div class="bsec">
-      <p class="blead">覚醒安定装置と電力供給端末を、<b>3ターン</b>守り抜く。</p>
-      <p class="bnote">どちらか一方でも構造耐久値が0になれば失敗。<b>敵を全滅させる必要はない。</b></p>
+    <div class="goalbox">
+      <p class="goaltext">覚醒安定装置と電力供給端末を<br><em>3ターン</em>守り抜く</p>
+      <p class="goalsub"><b class="fail">どちらか一方でも構造耐久値が0になれば失敗。</b><br>敵を全滅させる必要はない。</p>
     </div>
 
     <div class="bsec">
