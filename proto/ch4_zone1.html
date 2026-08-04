@@ -147,9 +147,13 @@ button{font:inherit;color:inherit}
 .cell.barrier::after{content:"";position:absolute;inset:14%;
   background:repeating-linear-gradient(45deg,rgba(240,236,227,.5) 0 2px,transparent 2px 5px);
   box-shadow:inset 0 0 0 1px rgba(240,236,227,.45)}
-.node-goal{position:absolute;inset:16%;border:1px solid var(--core);display:grid;place-items:center;
-  font-family:var(--font-data);font-size:9px;letter-spacing:.08em;color:var(--core);
-  background:rgba(111,208,189,.07)}
+.node-goal{position:absolute;inset:12%;border:1px solid var(--core);display:grid;place-items:center;
+  font-family:var(--font-data);font-size:9px;letter-spacing:.06em;color:var(--core);
+  line-height:1.25;background:rgba(111,208,189,.07)}
+.node-goal .lbl2{font-size:8.5px;opacity:.85}
+.node-goal .val{display:block;margin-top:1px;font-size:16px;font-weight:700;letter-spacing:0}
+.node-goal .val .drop{font-size:16px}
+.node-goal .val .of{font-size:9.5px;opacity:.7;font-weight:400}
 .node-goal.lit{background:rgba(111,208,189,.22)}
 .tick{position:absolute;top:2px;right:3px;font-family:var(--font-data);font-size:8.5px;
   letter-spacing:.06em;color:var(--ember)}
@@ -433,7 +437,7 @@ button{font:inherit;color:inherit}
   font-family:var(--font-data);font-size:7.5px;letter-spacing:.02em;line-height:1.3;
   padding:1px 0;color:var(--void);background:var(--watch);opacity:.95}
 .sitetag{position:absolute;left:0;right:0;bottom:1px;z-index:4;pointer-events:none;text-align:center;
-  font-family:var(--font-data);font-size:7.5px;letter-spacing:.02em;padding:1px 0}
+  font-family:var(--font-data);font-size:9px;font-weight:600;letter-spacing:.02em;padding:2px 0}
 .sitetag.ok {color:var(--void);background:var(--core);opacity:.95}
 .sitetag.bad{color:var(--light);background:var(--ember);opacity:.95}
 /* 施設の枠は所属を示す色。撃たれても赤へ変えない（敵と同じ色にしない）。
@@ -1417,8 +1421,8 @@ function drawPlot(){
         const g=document.createElement('div');
         g.className='node-goal'+(now<=0?'':' lit')+(hit?' struck':' safe');
         g.innerHTML = hit
-          ? `${site.short}<br><b style="font-family:var(--font-data)">${now}<span class="drop">→${Math.max(0,now-hit)}</span></b>`
-          : `${site.short}<br><b style="font-family:var(--font-data)">${now}/${site.max}</b>`;
+          ? `<span class="lbl2">${site.short}</span><b class="val">${now}<span class="drop">→${Math.max(0,now-hit)}</span></b>`
+          : `<span class="lbl2">${site.short}</span><b class="val">${now}<span class="of">/${site.max}</span></b>`;
         c.appendChild(g);
         const tag=document.createElement('div');
         tag.className = 'sitetag ' + (hit?'bad':'ok');
