@@ -273,6 +273,30 @@ button{font:inherit;color:inherit}
 .curtain{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:24px;
   background:rgba(6,5,9,.82);backdrop-filter:blur(7px);animation:veil .32s ease-out}
 .curtain[hidden]{display:none}
+
+/* 開始画面は内容が縦に長いので、中央寄せではなくスクロール領域として扱う。
+   place-items:center のままだと、はみ出した分が上下に切れて届かなくなる。 */
+.curtain.brief{
+  display:block; place-items:initial; padding:0;
+  height:100vh; height:100dvh;          /* iOSのアドレスバー分を吸収する */
+  overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+}
+.curtain.brief .slate.wide{
+  margin:0 auto; padding:24px 20px 0;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom));
+}
+/* STARTは常に手の届く位置に置く */
+.curtain.brief .acts{
+  position:sticky; bottom:0; margin-top:18px;
+  padding:14px 0 calc(14px + env(safe-area-inset-bottom));
+  background:linear-gradient(to bottom, rgba(6,5,9,0), rgba(6,5,9,.93) 34%);
+}
+/* 開始画面の見出しは、結果画面ほど大きくしない */
+.curtain.brief .slate .big{
+  font-size:clamp(22px,5.2vw,30px); letter-spacing:.13em; text-indent:.13em;
+  color:var(--light);
+}
+.curtain.brief .slate .over{margin-bottom:12px}
 .slate.wide{max-width:580px;text-align:left}
 .slate.wide .over,.slate.wide .big{text-align:center}
 .goalbox{margin:14px 0 0;padding:18px 20px 15px;border:1px solid var(--helios);
@@ -321,6 +345,10 @@ button{font:inherit;color:inherit}
   animation:rise .5s .46s both}
 .slate .acts .btn{min-width:132px;justify-content:center;text-align:center}
 @keyframes rise{from{opacity:0;transform:translateY(9px)}}
+@media(hover:none){
+  /* 指操作ではホバーが無いため、押せるマスの見え方をカーソルに頼らない */
+  .cell.pick{cursor:default}
+}
 @media(prefers-reduced-motion:reduce){
   .curtain,.slate *{animation:none!important}
 }
@@ -436,8 +464,7 @@ button{font:inherit;color:inherit}
   .plot{grid-template-columns:14px repeat(8,minmax(0,1fr))}
   .axis{font-size:8px}
 
-  /* マス幅を基準に、盤面上の文字を拡大する */
-  .board{--u:calc((100vw - 40px) / 8)}
+  /* マス幅を基準に、盤面上の文字を拡大する（--u は .plot 側で定義） */
   .token{font-size:calc(var(--u)*0.30)}
   .node-goal{inset:8%}
   .node-goal .lbl2{font-size:calc(var(--u)*0.17)}
@@ -462,12 +489,13 @@ button{font:inherit;color:inherit}
   .log{max-height:120px}
   .key{font-size:9.5px;line-height:1.7}
 
-  /* 開始画面は縦に長いのでスクロールさせる */
-  .curtain{align-items:flex-start;overflow-y:auto;padding:12px 10px}
-  .slate.wide{max-width:100%;padding:16px 14px 18px}
+  /* 開始画面 */
+  .curtain.brief .slate.wide{max-width:100%;padding:16px 14px 0}
   .goaltext{font-size:17px}
+  .goalbox{padding:14px 12px 12px}
   .blist{font-size:12px;line-height:1.7}
-  .bsec{margin-top:11px}
+  .bsec{margin-top:12px}
+  .bfoot{margin-top:14px}
   .brief .btn.go{width:100%;min-width:0}
 }
 
