@@ -127,7 +127,8 @@ button{font:inherit;color:inherit}
 .dock .sep{flex:1}
 .keys{font-family:var(--font-data);font-size:9.5px;letter-spacing:.1em;color:var(--shade);white-space:nowrap}
 .keys kbd{border:1px solid var(--rule);border-radius:2px;padding:1px 4px;margin:0 1px;color:var(--dust)}
-.plot{display:grid;grid-template-columns:20px repeat(8,minmax(0,1fr));gap:0}
+.plot{display:grid;grid-template-columns:20px repeat(8,minmax(0,1fr));gap:0;
+  --u:calc((100vw - 40px) / 8)}
 .axis{display:flex;align-items:center;justify-content:center;font-family:var(--font-data);
   font-size:9.5px;color:var(--shade);letter-spacing:.05em}
 .axis.col{padding-bottom:5px}
@@ -420,6 +421,54 @@ button{font:inherit;color:inherit}
   .rail{order:2}
   .log{max-height:150px}
   .btn{flex:1 1 auto}
+}
+
+/* ── スマートフォン ─────────────────────
+   盤面を画面幅いっぱいに使い、指で押せる大きさを確保する。
+   盤面上の小さなラベルは、マス幅に比例させて読める大きさにする。 */
+@media(max-width:560px){
+  html{-webkit-text-size-adjust:100%}
+  .wrap{padding:10px 8px 28px}
+  .masthead{padding-bottom:10px}
+  .title{font-size:19px;line-height:1.35}
+  .mission{font-size:12px}
+  .plotwrap{padding:6px}
+  .plot{grid-template-columns:14px repeat(8,minmax(0,1fr))}
+  .axis{font-size:8px}
+
+  /* マス幅を基準に、盤面上の文字を拡大する */
+  .board{--u:calc((100vw - 40px) / 8)}
+  .token{font-size:calc(var(--u)*0.30)}
+  .node-goal{inset:8%}
+  .node-goal .lbl2{font-size:calc(var(--u)*0.17)}
+  .node-goal .val{font-size:calc(var(--u)*0.34);margin-top:0}
+  .node-goal .val .drop{font-size:calc(var(--u)*0.34)}
+  .node-goal .val .of{font-size:calc(var(--u)*0.19)}
+  .sitetag{font-size:calc(var(--u)*0.18);padding:1px 0}
+  .divert{font-size:calc(var(--u)*0.16)}
+  .lure{font-size:calc(var(--u)*0.19);padding:1px 2px}
+  .pending{font-size:calc(var(--u)*0.16)}
+  .hp{font-size:calc(var(--u)*0.20)}
+
+  /* 指で押せる大きさ */
+  .btn{min-height:44px;padding:10px 12px;font-size:13px}
+  .card{padding:8px}
+  .dock{gap:8px}
+
+  /* 右側パネル */
+  .rail{gap:10px}
+  .step .how{font-size:11px}
+  .zonest{font-size:10.5px}
+  .log{max-height:120px}
+  .key{font-size:9.5px;line-height:1.7}
+
+  /* 開始画面は縦に長いのでスクロールさせる */
+  .curtain{align-items:flex-start;overflow-y:auto;padding:12px 10px}
+  .slate.wide{max-width:100%;padding:16px 14px 18px}
+  .goaltext{font-size:17px}
+  .blist{font-size:12px;line-height:1.7}
+  .bsec{margin-top:11px}
+  .brief .btn.go{width:100%;min-width:0}
 }
 
 /* 警戒圏（5C.4）
