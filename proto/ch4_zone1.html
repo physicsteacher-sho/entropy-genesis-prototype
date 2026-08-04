@@ -413,7 +413,10 @@ button{font:inherit;color:inherit}
   font-family:var(--font-data);font-size:7.5px;letter-spacing:.02em;padding:1px 0}
 .sitetag.ok {color:var(--void);background:var(--core);opacity:.95}
 .sitetag.bad{color:var(--light);background:var(--ember);opacity:.95}
-.node-goal.struck{border-color:var(--ember);color:var(--ember)}
+/* 施設の枠は所属を示す色。撃たれても赤へ変えない（敵と同じ色にしない）。
+   被弾は帯と数字だけで伝える。 */
+.node-goal.struck{border-color:var(--core);color:var(--core)}
+.node-goal .drop{color:var(--ember)}
 .pending{position:absolute;inset:18%;display:grid;place-items:center;text-align:center;
   font-family:var(--font-data);font-size:8px;line-height:1.25;letter-spacing:.04em;
   color:var(--light);border:1px dashed rgba(240,236,227,.55);border-radius:3px;
@@ -470,9 +473,9 @@ button{font:inherit;color:inherit}
         <span><i class="k-zone"></i>保全機の警戒圏（常に同じ範囲）</span>
         <span><i class="k-lure"></i><b>誘</b>＝ここへ入れば保全機の対象になる</span>
         <span><i class="k-lure"></i><b>α・β・γ を誘導</b>＝いま引き受けている保全機</span>
-        <span><i class="k-goal"></i>装置／端末（どちらも守る）</span>
+        <span><i class="k-goal"></i><b>青緑の四角＝守る施設</b>（装置・端末。どちらも0にしない）</span>
         <span><i class="k-bar"></i>防壁（展開まで1ターン）</span>
-        <span>○ 味方 ／ ⬔ 保全機</span>
+        <span><b>金の丸＝味方</b> ／ <b>赤の角形＝保全機</b>（敵）</span>
       </div>
     </div>
 
@@ -1346,12 +1349,12 @@ function drawPlot(){
         const g=document.createElement('div');
         g.className='node-goal'+(now<=0?'':' lit')+(hit?' struck':' safe');
         g.innerHTML = hit
-          ? `${site.short}<br><b style="font-family:var(--font-data)">${now}→${Math.max(0,now-hit)}</b>`
+          ? `${site.short}<br><b style="font-family:var(--font-data)">${now}<span class="drop">→${Math.max(0,now-hit)}</span></b>`
           : `${site.short}<br><b style="font-family:var(--font-data)">${now}/${site.max}</b>`;
         c.appendChild(g);
         const tag=document.createElement('div');
         tag.className = 'sitetag ' + (hit?'bad':'ok');
-        tag.textContent = hit ? '照射される' : '照射なし';
+        tag.textContent = hit ? `このターン −${hit}` : '守れている';
         c.appendChild(tag);
       }
 
