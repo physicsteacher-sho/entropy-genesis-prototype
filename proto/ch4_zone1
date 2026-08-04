@@ -1,0 +1,1590 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ENTROPY: GENESIS ／ 戦闘プロトタイプ v5.4</title>
+<style>
+:root{
+  /* 仮配色：冷えていく宇宙。残光＝金、敵の因果＝熾火、目標＝核 */
+  --void:#0c0b10;
+  --deep:#121118;
+  --shell:#191820;
+  --raise:#201f29;
+  --rule:#2e2b38;
+  --rule-soft:#232130;
+  --dust:#8b8697;
+  --light:#f0ece3;
+  --helios:#e6c168;
+  --ember:#c9584c;
+  --core:#6fd0bd;
+  --shade:#5a5766;
+  --watch:#9a8fd8;   /* 警戒圏。移動範囲(helios)・装置(core)・被害(ember)と重ねない */
+
+  --font-body:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  --font-data:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--void);color:var(--light);font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;font-feature-settings:"palt" 1}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 80% at 50% -10%,rgba(230,193,104,.055),transparent 60%);
+}
+button{font:inherit;color:inherit}
+.wrap{position:relative;z-index:1;width:min(1240px,100%);margin:auto;padding:20px 18px 48px}
+
+/* ── 見出し ─────────────────────────── */
+.eyebrow{font-family:var(--font-data);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dust)}
+.masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
+  padding-bottom:14px;border-bottom:1px solid var(--rule)}
+.title{font-size:19px;font-weight:600;letter-spacing:.06em;margin:5px 0 0}
+.title em{font-style:normal;color:var(--helios)}
+.mission{font-size:13px;color:var(--dust);margin-top:5px}
+.turncount{text-align:right;flex-shrink:0}
+.turncount .n{font-family:var(--font-data);font-size:38px;line-height:.9;letter-spacing:-.02em}
+.turncount .of{font-family:var(--font-data);font-size:12px;color:var(--dust);letter-spacing:.1em}
+
+/* ── フェイズ帯 ─────────────────────── */
+.phasebar{display:flex;align-items:center;gap:14px;margin:16px 0 18px;padding:11px 15px;
+  border:1px solid var(--rule);border-left:3px solid var(--helios);background:var(--shell);border-radius:3px}
+.phasebar.is-enemy{border-left-color:var(--ember);background:linear-gradient(90deg,rgba(201,88,76,.09),transparent 55%)}
+.phasebar.is-over{border-left-color:var(--core)}
+.phasebar strong{font-size:14px;letter-spacing:.08em;white-space:nowrap}
+.phasebar span{font-size:12.5px;color:var(--dust);line-height:1.5}
+
+/* ── 結果バナー ─────────────────────── */
+.verdict{border:1px solid var(--rule);border-radius:3px;padding:16px 18px;margin-bottom:16px;background:var(--shell)}
+.verdict.win{border-color:var(--core);background:linear-gradient(90deg,rgba(111,208,189,.10),transparent)}
+.verdict.lose{border-color:var(--ember);background:linear-gradient(90deg,rgba(201,88,76,.10),transparent)}
+.verdict h2{margin:6px 0 0;font-size:17px;letter-spacing:.09em;font-weight:600}
+.verdict p{margin:7px 0 0;font-size:13px;color:var(--dust)}
+
+/* ── 味方カード ─────────────────────── */
+.roster{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:16px}
+.card{position:relative;min-width:0;text-align:left;padding:10px 11px 11px;background:var(--shell);
+  border:1px solid var(--rule);border-radius:3px;cursor:pointer;transition:border-color .12s,background .12s}
+.card:hover:not(:disabled){border-color:var(--helios)}
+.card:disabled{cursor:default}
+.card.is-sel{border-color:var(--helios);background:var(--raise);box-shadow:inset 0 0 0 1px rgba(230,193,104,.35)}
+.card.is-done{opacity:.4}
+.card.is-down{opacity:.28;border-style:dashed}
+.card .who{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.card .nm{font-size:13.5px;font-weight:600;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .hpnum{font-family:var(--font-data);font-size:11px;color:var(--dust);flex-shrink:0}
+.card .role{font-size:10.5px;color:var(--shade);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gauge{position:relative;height:4px;margin-top:8px;background:#26242e;overflow:hidden}
+.gauge i{position:absolute;inset:0 auto 0 0;background:var(--helios)}
+.gauge b{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(115deg,var(--ember) 0 3px,rgba(201,88,76,.35) 3px 6px)}
+.incoming{font-family:var(--font-data);font-size:10px;color:var(--ember);letter-spacing:.06em;margin-top:5px;min-height:13px}
+.incoming.safe{color:var(--shade)}
+.incoming.fatal{color:var(--ember);font-weight:700}
+
+/* ── 本体2カラム ────────────────────── */
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 336px;gap:20px;align-items:start}
+
+/* ── 盤面 ───────────────────────────── */
+.plotwrap{position:relative;border:1px solid var(--rule);border-radius:3px;background:var(--deep);padding:11px}
+
+/* ── 吹き出しコマンド ───────────────── */
+.pop{position:absolute;z-index:20;width:248px;padding:11px 12px 12px;
+  background:var(--shell);border:1px solid var(--helios);border-radius:4px;
+  box-shadow:0 14px 34px rgba(0,0,0,.62);
+  animation:pop .13s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(4px)}}
+.pop[hidden]{display:none}
+.pop::before,.pop::after{content:"";position:absolute;left:var(--arrow,50%);
+  width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;
+  transform:translateX(-8px)}
+.pop::before{bottom:-8px;border-top:8px solid var(--helios)}
+.pop::after{bottom:-6.5px;border-top:8px solid var(--shell)}
+.pop.below::before{bottom:auto;top:-8px;border-top:0;border-bottom:8px solid var(--helios)}
+.pop.below::after{bottom:auto;top:-6.5px;border-top:0;border-bottom:8px solid var(--shell)}
+.pop .head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  padding-bottom:8px;margin-bottom:9px;border-bottom:1px solid var(--rule)}
+.pop .head b{font-size:13.5px;letter-spacing:.04em}
+.pop .head span{font-family:var(--font-data);font-size:10px;color:var(--dust)}
+.pop .say{font-size:11.5px;color:var(--dust);line-height:1.55;margin-bottom:9px}
+.pop .set{display:grid;gap:6px}
+.pop .btn{width:100%;text-align:left;min-height:34px;padding:7px 11px;font-size:12.5px}
+.pop .pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+/* 移動中・対象選択中は盤面を隠さないよう帯に畳む */
+.pop.bar{width:auto;max-width:calc(100% - 22px);left:11px!important;top:auto!important;bottom:11px;
+  display:flex;align-items:center;gap:13px;padding:9px 11px}
+.pop.bar.atTop{bottom:auto;top:11px}
+.pop.bar::before,.pop.bar::after{display:none}
+.barrow{display:flex;align-items:baseline;gap:9px;min-width:0}
+.barrow b{font-size:12.5px;white-space:nowrap}
+.barrow span{font-size:11.5px;color:var(--dust);line-height:1.45}
+.pop.bar .btn{width:auto;white-space:nowrap;flex-shrink:0;min-height:32px;padding:6px 11px}
+.token.sel{box-shadow:0 0 0 2px var(--helios),0 0 16px rgba(230,193,104,.35)}
+
+/* ── 画面下の固定操作 ───────────────── */
+.dock{position:sticky;bottom:0;z-index:30;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  margin-top:20px;padding:12px 14px;
+  background:rgba(18,17,24,.94);backdrop-filter:blur(9px);
+  border:1px solid var(--rule);border-radius:4px}
+.dock .sep{flex:1}
+.keys{font-family:var(--font-data);font-size:9.5px;letter-spacing:.1em;color:var(--shade);white-space:nowrap}
+.keys kbd{border:1px solid var(--rule);border-radius:2px;padding:1px 4px;margin:0 1px;color:var(--dust)}
+.plot{display:grid;grid-template-columns:20px repeat(8,minmax(0,1fr));gap:0}
+.axis{display:flex;align-items:center;justify-content:center;font-family:var(--font-data);
+  font-size:9.5px;color:var(--shade);letter-spacing:.05em}
+.axis.col{padding-bottom:5px}
+.cell{position:relative;aspect-ratio:1;min-width:0;padding:0;background:transparent;cursor:default;
+  border:0;border-right:1px solid var(--rule-soft);border-bottom:1px solid var(--rule-soft)}
+.cell:nth-child(9n){border-right:0}
+.plot .cell.lastrow{border-bottom:0}
+.cell.pick{cursor:pointer}
+.cell:focus-visible{outline:2px solid var(--helios);outline-offset:-2px;z-index:3}
+.cell.reach::after{content:"";position:absolute;inset:0;background:rgba(230,193,104,.09);
+  box-shadow:inset 0 0 0 1px rgba(230,193,104,.18)}
+.cell.aim::after{content:"";position:absolute;inset:2px;border:1px solid var(--helios);
+  box-shadow:0 0 0 1px rgba(230,193,104,.2)}
+.cell.blast::before{content:"";position:absolute;inset:0;background:rgba(201,88,76,.11);
+  box-shadow:inset 0 0 0 1px rgba(201,88,76,.22)}
+.cell.impact::before{background:rgba(201,88,76,.42)}
+.cell.barrier::after{content:"";position:absolute;inset:14%;
+  background:repeating-linear-gradient(45deg,rgba(240,236,227,.5) 0 2px,transparent 2px 5px);
+  box-shadow:inset 0 0 0 1px rgba(240,236,227,.45)}
+.node-goal{position:absolute;inset:16%;border:1px solid var(--core);display:grid;place-items:center;
+  font-family:var(--font-data);font-size:9px;letter-spacing:.08em;color:var(--core);
+  background:rgba(111,208,189,.07)}
+.node-goal.lit{background:rgba(111,208,189,.22)}
+.tick{position:absolute;top:2px;right:3px;font-family:var(--font-data);font-size:8.5px;
+  letter-spacing:.06em;color:var(--ember)}
+
+.token{position:absolute;inset:12%;display:grid;place-items:center;font-size:11.5px;font-weight:600;
+  letter-spacing:.02em;background:var(--raise);transition:opacity .15s}
+.token.ally{border:1px solid var(--helios);border-radius:50%;color:var(--helios)}
+.token.foe{border:1px solid var(--ember);color:var(--ember);
+  clip-path:polygon(16% 0,100% 0,100% 84%,84% 100%,0 100%,0 16%)}
+.token.spent{opacity:.35}
+.token.halted{border-style:dashed;opacity:.5}
+.token.acting{box-shadow:0 0 0 2px rgba(201,88,76,.5),0 0 18px rgba(201,88,76,.3)}
+.tokenhp{position:absolute;left:12%;right:12%;bottom:4%;height:2px;background:#2a2833}
+.tokenhp i{display:block;height:100%;background:var(--helios)}
+.foehp i{background:var(--ember)}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:11px;font-size:11px;color:var(--dust);
+  flex-shrink:0}
+.key i{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px}
+.key .k-blast{background:rgba(201,88,76,.28);box-shadow:inset 0 0 0 1px rgba(201,88,76,.5)}
+.key .k-goal{box-shadow:inset 0 0 0 1px var(--core);background:rgba(111,208,189,.14)}
+.lanemark{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(201,88,76,.17) 0 5px,transparent 5px 11px)}
+.lanemark::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;
+  background:rgba(201,88,76,.34)}
+.lanemark.tip{display:grid;place-items:center}
+.lanemark.tip span{position:relative;font-size:11px;color:var(--ember);line-height:1}
+.endmark{position:absolute;inset:11%;pointer-events:none;border:1px dashed var(--ember);
+  display:grid;place-items:center;font-family:var(--font-data);font-size:8px;
+  letter-spacing:.06em;color:var(--ember);background:rgba(201,88,76,.10)}
+.key .k-lane{background:repeating-linear-gradient(90deg,rgba(201,88,76,.4) 0 3px,transparent 3px 6px)}
+.key .k-end{box-shadow:inset 0 0 0 1px var(--ember);background:rgba(201,88,76,.14)}
+
+/* ── 右カラム ───────────────────────── */
+.rail{display:grid;gap:14px}
+.panel{border:1px solid var(--rule);border-radius:3px;background:var(--shell);padding:13px 14px}
+.panel > .eyebrow{display:block;margin-bottom:11px}
+
+/* 因果スパイン */
+.spine{list-style:none;margin:0;padding:0}
+.step{position:relative;display:grid;grid-template-columns:26px minmax(0,1fr);gap:11px;padding-bottom:14px}
+.step:last-child{padding-bottom:0}
+.step .rail-line{position:absolute;left:12px;top:24px;bottom:0;width:1px;background:var(--rule)}
+.step:last-child .rail-line{display:none}
+.step.chained .rail-line{background:repeating-linear-gradient(180deg,var(--ember) 0 3px,transparent 3px 7px)}
+.pip{width:25px;height:25px;display:grid;place-items:center;font-family:var(--font-data);font-size:11px;
+  border:1px solid var(--rule);border-radius:50%;color:var(--dust);background:var(--deep);z-index:1}
+.step.live .pip{border-color:var(--ember);color:var(--ember);box-shadow:0 0 0 3px rgba(201,88,76,.16)}
+.step.spent{opacity:.4}
+.step.void .pip{border-style:dashed}
+.step .lbl{display:flex;align-items:baseline;gap:8px}
+.step .lbl b{font-size:13px;font-weight:600;letter-spacing:.03em}
+.step .lbl span{font-family:var(--font-data);font-size:9.5px;color:var(--shade);letter-spacing:.1em}
+.rule-tag{display:inline-block;margin-top:5px;padding:1px 6px;font-family:var(--font-data);font-size:9.5px;
+  letter-spacing:.1em;color:var(--dust);border:1px solid var(--rule)}
+.step .how{font-size:11.5px;color:var(--shade);margin-top:5px;line-height:1.5}
+.step .out{font-size:12.5px;margin-top:6px;line-height:1.55;color:var(--light)}
+.step .out .dmg{font-family:var(--font-data);color:var(--ember)}
+.step .out .nil{color:var(--shade)}
+.step .out .good{color:var(--core)}
+.chain-note{display:inline-block;margin-top:6px;font-family:var(--font-data);font-size:9.5px;
+  letter-spacing:.08em;color:var(--ember)}
+
+/* 目標 */
+.goalrow{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--dust)}
+.pips{display:flex;gap:5px;margin-top:9px}
+.pips i{flex:1;height:3px;background:#26242e}
+.pips i.on{background:var(--core)}
+
+/* 操作 */
+.hint{font-size:12.5px;color:var(--dust);line-height:1.6;min-height:38px}
+.cmds{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.btn{min-height:38px;padding:8px 13px;background:var(--raise);border:1px solid var(--rule);
+  border-radius:2px;cursor:pointer;font-size:12.5px;letter-spacing:.03em;transition:border-color .12s}
+.btn:hover:not(:disabled){border-color:var(--helios)}
+.btn:focus-visible{outline:2px solid var(--helios);outline-offset:1px}
+.btn:disabled{opacity:.32;cursor:not-allowed}
+.btn.key-act{border-color:rgba(230,193,104,.5);color:var(--helios)}
+.btn.go{background:var(--helios);color:#15130c;border-color:var(--helios);font-weight:700}
+.btn.go.confirm{background:var(--ember);border-color:var(--ember);color:#fff}
+.btn.ghost{background:transparent}
+.btn.wide{flex:1 1 100%}
+
+/* ログ */
+.log{max-height:184px;overflow:auto;font-size:12px;line-height:1.65;color:var(--dust);margin:0;padding:0;list-style:none}
+.log li{padding:3px 0 3px 11px;border-left:1px solid var(--rule-soft)}
+.log li.mark{border-left-color:var(--helios);color:var(--light)}
+.log li.hurt{border-left-color:var(--ember)}
+.log li.win{border-left-color:var(--core);color:var(--core)}
+.log .t{font-family:var(--font-data);font-size:9.5px;color:var(--shade);letter-spacing:.08em;margin-right:7px}
+
+.tray{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid var(--rule)}
+.note{margin-top:18px;padding:12px 14px;border-left:2px solid var(--rule);font-size:12px;
+  color:var(--dust);line-height:1.7}
+.note b{color:var(--light);font-weight:600}
+.colophon{margin-top:22px;font-family:var(--font-data);font-size:10px;letter-spacing:.13em;color:var(--shade)}
+
+/* ── フェイズ切替バナー ─────────────── */
+.flash{position:fixed;inset:0;z-index:110;display:grid;place-items:center;pointer-events:none}
+.flash[hidden]{display:none}
+.flash .band{position:relative;width:100%;padding:26px 24px;text-align:center;
+  background:linear-gradient(90deg,transparent,rgba(15,14,20,.94) 16%,rgba(15,14,20,.94) 84%,transparent);
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  animation:bandIn .26s ease-out both, bandOut .34s ease-in 1.12s both}
+.flash.ally .band{border-color:rgba(230,193,104,.45)}
+.flash.foe  .band{border-color:rgba(201,88,76,.55)}
+.fx-over{margin:0 0 9px;font-family:var(--font-data);font-size:10px;letter-spacing:.4em;
+  text-transform:uppercase;color:var(--dust)}
+.fx-name{margin:0;font-size:clamp(23px,4.4vw,34px);font-weight:600;letter-spacing:.3em;
+  text-indent:.3em;color:var(--helios)}
+.flash.foe .fx-name{color:var(--ember)}
+.fx-sub{margin:11px 0 0;font-size:12px;color:var(--dust);letter-spacing:.04em}
+@keyframes bandIn{from{opacity:0;transform:scaleX(.9)}}
+@keyframes bandOut{to{opacity:0}}
+
+/* ── 全画面リザルト ─────────────────── */
+.curtain{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:24px;
+  background:rgba(6,5,9,.82);backdrop-filter:blur(7px);animation:veil .32s ease-out}
+.curtain[hidden]{display:none}
+@keyframes veil{from{opacity:0}}
+.curtain::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(58% 44% at 50% 42%,rgba(111,208,189,.16),transparent 70%)}
+.curtain.fail::before{background:radial-gradient(58% 44% at 50% 42%,rgba(201,88,76,.16),transparent 70%)}
+.slate{position:relative;text-align:center;max-width:520px;width:100%}
+.slate .over{font-family:var(--font-data);font-size:10.5px;letter-spacing:.42em;text-transform:uppercase;
+  color:var(--dust);margin:0 0 20px;animation:rise .5s .05s both}
+.slate .big{margin:0;font-size:clamp(38px,7.6vw,62px);font-weight:600;letter-spacing:.19em;
+  line-height:1.06;text-indent:.19em;color:var(--core);animation:rise .5s .12s both}
+.curtain.fail .slate .big{color:var(--ember)}
+.stamp{display:flex;align-items:center;justify-content:center;gap:15px;margin:20px 0 0;
+  animation:rise .5s .22s both}
+.stamp span{font-family:var(--font-data);font-size:14px;letter-spacing:.5em;text-indent:.5em;color:var(--light)}
+.stamp i{flex:1;max-width:96px;height:1px;background:linear-gradient(90deg,transparent,var(--rule) 30%,var(--rule))}
+.stamp i:last-child{background:linear-gradient(270deg,transparent,var(--rule) 30%,var(--rule))}
+.slate .why{margin:24px 0 0;font-size:13.5px;color:var(--dust);line-height:1.75;animation:rise .5s .3s both}
+.tallies{display:flex;justify-content:center;gap:34px;margin:26px 0 0;animation:rise .5s .38s both}
+.tally{text-align:center}
+.tally b{display:block;font-family:var(--font-data);font-size:23px;font-weight:400;letter-spacing:.02em}
+.tally span{display:block;font-family:var(--font-data);font-size:9.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--shade);margin-top:5px}
+.slate .acts{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin:32px 0 0;
+  animation:rise .5s .46s both}
+.slate .acts .btn{min-width:132px;justify-content:center;text-align:center}
+@keyframes rise{from{opacity:0;transform:translateY(9px)}}
+@media(prefers-reduced-motion:reduce){
+  .curtain,.slate *{animation:none!important}
+}
+/* ── 1画面に収める（PC） ─────────────── */
+.panel.tip{font-size:11.5px;color:var(--dust);line-height:1.65}
+.panel.tip b{color:var(--light);font-weight:600}
+
+@media(min-width:881px) and (min-height:500px){
+  /* 盤面は8列×6行。画面の高さから幅を逆算し、全体幅もそれに合わせて詰める */
+  :root{--boardw:max(330px, calc((100vh - 340px) * 4 / 3 + 44px))}
+  .wrap{width:min(1240px, 100%, calc(var(--boardw) + var(--railgap, 382px)));
+    height:100vh;display:flex;flex-direction:column;padding:14px 18px 12px}
+  .masthead{padding-bottom:10px}
+  .title{font-size:17px}
+  .mission{font-size:12px;margin-top:3px}
+  .turncount .n{font-size:30px}
+  .phasebar{margin:11px 0;padding:8px 13px}
+  .roster{gap:8px;margin-bottom:11px}
+  .card{padding:8px 10px 9px}
+  .card .role{font-size:10px;margin-top:1px}
+  .gauge{margin-top:6px}
+  .incoming{margin-top:4px;min-height:12px}
+  .verdict{padding:12px 15px;margin-bottom:11px}
+
+  /* 既定は2カラム：味方カードを上段、盤面とレールを下段に置く */
+  .stage{flex:1;min-height:0;display:grid;gap:0 16px;
+    grid-template-columns:minmax(0,1fr) 330px;
+    grid-template-rows:auto minmax(0,1fr);
+    grid-template-areas:"roster roster" "board rail"}
+  .roster{grid-area:roster}
+  .boardcol{grid-area:board;display:flex;flex-direction:column;min-height:0}
+  .rail{grid-area:rail}
+  .plotwrap{width:min(100%, var(--boardw));max-width:100%;padding:9px;align-self:flex-start}
+  .key{width:min(100%, var(--boardw))}
+  .key{margin-top:8px;font-size:10.5px;gap:5px 13px}
+  .rail{height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    gap:11px;padding-right:3px}
+  .rail::-webkit-scrollbar{width:7px}
+  .rail::-webkit-scrollbar-thumb{background:var(--rule);border-radius:4px}
+  .panel{padding:11px 12px}
+  .step{padding-bottom:11px}
+  .step .how{font-size:11px;margin-top:4px}
+  .log{max-height:126px}
+  .dock{margin-top:11px;padding:9px 12px;gap:7px}
+  .dock .btn{min-height:34px;padding:6px 11px;font-size:12px}
+  .colophon{display:none}
+}
+
+/* 横幅に余裕があるときは味方カードを左列へ移し、盤面の縦を広げる */
+@media(min-width:1460px) and (min-height:500px){
+  :root{--railgap:660px}
+  .wrap{width:min(1760px, 100%, calc(var(--boardw) + var(--railgap)))}
+  .stage{gap:16px;
+    grid-template-columns:214px minmax(0,1fr) 376px;
+    grid-template-rows:minmax(0,1fr);
+    grid-template-areas:"roster board rail"}
+  .roster{grid-template-columns:minmax(0,1fr);align-content:start;margin-bottom:0;gap:9px}
+  .card{padding:11px 12px 12px}
+  .card .nm{font-size:14px}
+  .card .role{display:block;font-size:10.5px}
+  .incoming{font-size:10.5px}
+}
+
+/* 表示倍率が高い／画面が低い場合はさらに詰める */
+@media(min-width:881px) and (max-height:760px){
+  .wrap{padding:10px 16px 10px}
+  .masthead{padding-bottom:8px}
+  .title{font-size:15px}
+  .mission{display:none}
+  .turncount .n{font-size:24px}
+  .phasebar{margin:8px 0;padding:6px 11px}
+  .phasebar strong{font-size:13px}
+  .phasebar span{font-size:11.5px}
+  .roster{margin-bottom:8px;gap:7px}
+  .card{padding:7px 9px 8px}
+  .card .role{display:none}
+  .card .nm{font-size:12.5px}
+  .stage{gap:13px;grid-template-columns:minmax(0,1fr) 300px}
+  :root{--railgap:345px}
+  .key{margin-top:6px;font-size:10px}
+  .dock{margin-top:8px;padding:7px 10px}
+  .dock .btn{min-height:31px;padding:5px 9px;font-size:11.5px}
+  .keys{display:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *{transition:none!important}
+  .curtain,.slate *,.pop,.flash .band{animation:none!important}
+}
+@media(max-width:880px){
+  .stage{grid-template-columns:1fr}
+  .wrap{padding:14px 12px 40px}
+  .masthead{flex-direction:column;align-items:flex-start;gap:10px}
+  .turncount{text-align:left}
+  .turncount .n{font-size:30px}
+  .roster{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card .role{display:none}
+  .rail{order:2}
+  .log{max-height:150px}
+  .btn{flex:1 1 auto}
+}
+
+/* 警戒圏（5C.4）
+   保全機が生きている限り、位置・大きさ・見た目は常に一定。
+   届く味方がいるかどうかで濃さを変えない（圏の存在は盤面の事実であり、
+   こちらの都合で見え方が変わってはならない）。
+   状態の変化は「誘」バッジ・対象線・予告リストの文字で示す。
+   ::before を使う。::after は移動可能マス（.reach）が使用中。 */
+.cell.zone::before{content:'';position:absolute;inset:2px;border-radius:3px;
+  border:1px solid rgba(154,143,216,.55);pointer-events:none}
+/* 侵入者がいる保全機の圏だけ、対象が変わっていることを示す */
+.cell.zone.hot::before{border-color:var(--watch);box-shadow:0 0 7px rgba(154,143,216,.30)}
+/* 移動できて、かつ入れば対象が変わるマス */
+.divert{position:absolute;left:0;right:0;bottom:1px;z-index:4;pointer-events:none;text-align:center;
+  font-family:var(--font-data);font-size:7.5px;letter-spacing:.02em;line-height:1.3;
+  padding:1px 0;color:var(--void);background:var(--watch);opacity:.95}
+.sitetag{position:absolute;left:0;right:0;bottom:1px;z-index:4;pointer-events:none;text-align:center;
+  font-family:var(--font-data);font-size:7.5px;letter-spacing:.02em;padding:1px 0}
+.sitetag.ok {color:var(--void);background:var(--core);opacity:.95}
+.sitetag.bad{color:var(--light);background:var(--ember);opacity:.95}
+.node-goal.struck{border-color:var(--ember);color:var(--ember)}
+.pending{position:absolute;inset:18%;display:grid;place-items:center;text-align:center;
+  font-family:var(--font-data);font-size:8px;line-height:1.25;letter-spacing:.04em;
+  color:var(--light);border:1px dashed rgba(240,236,227,.55);border-radius:3px;
+  background:repeating-linear-gradient(45deg,rgba(240,236,227,.10) 0 3px,transparent 3px 7px);
+  pointer-events:none;z-index:2}
+.token.resist{box-shadow:0 0 0 2px rgba(240,236,227,.45)}
+.lure{position:absolute;left:2px;top:2px;z-index:2;pointer-events:none;
+  font-family:var(--font-data);font-size:8px;letter-spacing:.02em;
+  padding:1px 3px;border-radius:3px;color:var(--void);background:var(--watch);opacity:.92}
+.key i.k-zone{background:transparent;border:1px solid rgba(154,143,216,.75)}
+.key i.k-lure{background:var(--watch);border:0}
+.why2{margin:2px 0 8px;font-size:12px;line-height:1.5;color:var(--ink-3,#8a94a3)}
+.durwrap{display:flex;flex-direction:column;gap:7px}
+.siterow{display:flex;flex-direction:column;gap:3px}
+.durwrap .sub{font-size:11px;color:var(--ink-3,#8a94a3)}
+.durwrap .num{font-family:var(--font-data)}
+.durbar{position:relative;height:9px;border-radius:5px;background:rgba(140,150,165,.22);overflow:hidden}
+.durbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}
+.durbar i.soon{background:rgba(226,178,74,.45)}
+.durbar i.now{background:rgba(120,190,150,.95)}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <header class="masthead">
+    <div>
+      <p class="eyebrow" style="margin:0">第4章 第一区画 ／ 覚醒処置区画</p>
+      <h1 class="title">ENTROPY: <em>GENESIS</em> 保全機 検証マップ c</h1>
+      <p class="mission">覚醒安定装置と電力供給端末を3ターン守り抜く。どちらか一方でも0になれば処理は止まる。</p>
+    </div>
+    <div class="turncount">
+      <p class="eyebrow" style="margin:0 0 4px">Turn</p>
+      <div><span class="n" id="turnNum">1</span> <span class="of">/ 3</span></div>
+    </div>
+  </header>
+
+  <div id="verdict" class="verdict" hidden aria-live="polite"></div>
+
+  <div id="phasebar" class="phasebar">
+    <strong id="phaseName">味方フェイズ</strong>
+    <span id="phaseNote">敵フェイズの結果は右に全部出ています。4人を好きな順に動かしてください。</span>
+  </div>
+
+  <div class="stage">
+    <div id="roster" class="roster"></div>
+
+    <div class="boardcol">
+      <div class="plotwrap">
+        <div id="plot" class="plot" aria-label="戦闘盤面 8×6"></div>
+        <div id="pop" class="pop" role="dialog" aria-label="コマンド" hidden></div>
+      </div>
+      <div class="key">
+        <span><i class="k-zone"></i>保全機の警戒圏（常に同じ範囲）</span>
+        <span><i class="k-lure"></i><b>誘</b>＝ここへ入れば保全機の対象になる</span>
+        <span><i class="k-lure"></i><b>α・β・γ を誘導</b>＝いま引き受けている保全機</span>
+        <span><i class="k-goal"></i>装置／端末（どちらも守る）</span>
+        <span><i class="k-bar"></i>防壁（展開まで1ターン）</span>
+        <span>○ 味方 ／ ⬔ 保全機</span>
+      </div>
+    </div>
+
+    <aside class="rail">
+      <section class="panel">
+        <span class="eyebrow">作戦目標</span>
+        <div class="goalrow"><span><b>覚醒安定処理</b></span><span id="goalCount" style="font-family:var(--font-data)">継続予定</span></div>
+        <p id="goalWhy" class="why2">装置への照射なし</p>
+        <div class="durwrap">
+          <span class="sub">依存条件：<b>どちらか一方でも0になると停止する</b></span>
+          <div class="siterow"><span class="sub">覚醒安定装置</span>
+            <div id="bar-dur" class="durbar"><i class="soon"></i><i class="now"></i></div>
+            <span id="num-dur" class="sub num">8 → 8 / 8</span></div>
+          <div class="siterow"><span class="sub">電力供給端末</span>
+            <div id="bar-pdur" class="durbar"><i class="soon"></i><i class="now"></i></div>
+            <span id="num-pdur" class="sub num">5 → 5 / 5</span></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <span class="eyebrow">敵フェイズ予測 ／ 素早さ順</span>
+        <ol id="spine" class="spine"></ol>
+      </section>
+
+      <section class="panel">
+        <span class="eyebrow">記録</span>
+        <ul id="log" class="log"><li>まだ何も起きていません。</li></ul>
+      </section>
+
+      <section class="panel tip">
+        <b>警戒圏は立入禁止ではありません。</b>むしろ入るのが手です。<b>「誘」</b>のマスは、移動できて、かつ入れば保全機の対象がその味方へ変わります。<b>圏内に立つのは移動だけで済むので、行動は別のことに使えます。</b>代償は毎ターン3の被弾です。<br>ほかに3つの手があります。<b>防壁</b>は指定した次のターンに実体化するため、1ターン先を読んで置く必要があります。<b>ブレイク</b>は中断できますが、その敵に耐性がつき次のターンは使えません。<b>重力牽引</b>は即時ですが、保全機は揃っていないと1マス移動して揃え直すので1ターンしか稼げません。ほかに、防壁で射線を遮る／レヴのブレイクで中断する／レクトの重力牽引で保全機を動かして射線をずらす、という手もあります。撃たれる味方は毎ターン3受けるので、誰に受けさせるかを配り直してください。
+      </section>
+    </aside>
+  </div>
+
+  <div class="dock">
+    <button id="btnCommit" class="btn go" type="button" disabled>敵フェイズを実行</button>
+    <button id="btnUndo" class="btn ghost" type="button" disabled>1手戻す</button>
+    <button id="btnPhaseTop" class="btn ghost" type="button" disabled>フェイズ開始へ戻す</button>
+    <button id="btnTurnTop" class="btn ghost" type="button" disabled>直前のターンへ戻る</button>
+    <button id="btnRestart" class="btn ghost" type="button">最初から</button>
+
+    <span class="sep"></span>
+    <span class="keys"><kbd>1</kbd>–<kbd>4</kbd> 味方　<kbd>Z</kbd> 1手戻す　<kbd>Enter</kbd> 実行　<kbd>Esc</kbd> 取消</span>
+  </div>
+
+  <p class="colophon">第4章 第一区画 検証ビルド c ／ 5C.4 警戒圏反応型（移動あり・能力制約あり）／ 配色・数値は仮</p>
+</main>
+
+<div id="flash" class="flash" hidden aria-hidden="true">
+  <div class="band">
+    <p class="fx-over" id="fxOver">Turn 1</p>
+    <p class="fx-name" id="fxName">味方フェイズ</p>
+    <p class="fx-sub" id="fxSub"></p>
+  </div>
+</div>
+
+<div id="curtain" class="curtain" hidden role="alertdialog" aria-modal="true" aria-labelledby="slateBig">
+  <div class="slate">
+    <p class="over" id="slateOver">Mission Complete</p>
+    <h2 class="big" id="slateBig">作戦成功</h2>
+    <div class="stamp"><i></i><span id="slateStamp">CLEAR</span><i></i></div>
+    <p class="why" id="slateWhy"></p>
+    <div class="tallies" id="slateTallies"></div>
+    <div class="acts" id="slateActs"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ══════════════════════════════════════════════
+   盤面定数
+   ══════════════════════════════════════════════ */
+const W = 8, H = 6, MAX_TURN = 3;
+/* 施設。いずれかが0になると覚醒安定処理が停止する（主条件と依存条件）。 */
+const DEVICE = {key:'dur',  x:3, y:3, name:'覚醒安定装置',   short:'装置', max:8};
+const POWER  = {key:'pdur', x:6, y:4, name:'電力供給端末',   short:'端末', max:5};
+const SITES  = [DEVICE, POWER];
+const siteAt = (x,y) => SITES.find(o=>o.x===x && o.y===y) || null;
+const SENTRY_R = 2;   /* 保全機の警戒圏（マンハッタン距離） */
+const COL = ['A','B','C','D','E','F','G','H'];
+
+const ROSTER = [
+  {id:'r', side:'ally', name:'レクト',   mark:'レ', role:'重力・時空',   x:1,y:2, hp:8,  max:8,  move:3},
+  {id:'m', side:'ally', name:'ミレア',   mark:'ミ', role:'装置・防壁',   x:0,y:3, hp:7,  max:7,  move:3},
+  {id:'v', side:'ally', name:'ヴァルグ', mark:'ヴ', role:'防御・護衛',   x:1,y:3, hp:10, max:10, move:2},
+  {id:'l', side:'ally', name:'レヴ',     mark:'レヴ',role:'高機動・中断', x:1,y:4, hp:6,  max:6,  move:4},
+  {id:'g1',side:'enemy',name:'保全機α',  mark:'保', role:'',            x:3,y:0, hp:6,  max:6,  spd:5},
+  {id:'g2',side:'enemy',name:'保全機β',  mark:'保', role:'',            x:7,y:3, hp:6,  max:6,  spd:4},
+  {id:'g3',side:'enemy',name:'保全機γ',  mark:'保', role:'',            x:6,y:1, hp:6,  max:6,  spd:3}
+];
+/* 各保全機の割り当て対象（開始時に明示する） */
+const ASSIGN = {g1:DEVICE, g2:DEVICE, g3:POWER};
+
+const NAME = Object.fromEntries(ROSTER.map(u => [u.id, u.name]));
+
+/* 対象ルールの明示テキスト（仕様書5章「対象ルールを明示する」） */
+const RULE = {
+  g1:{tag:'条件対象型', assign:'覚醒安定装置', how:'警戒圏（距離2以内）に味方がいれば、その中で最も近い味方を再構成照射する。同距離なら部隊順。いなければ、割り当てられた覚醒安定装置を照射する。照射には同じ行または列にいることが必要で、防壁で遮れる。<b>行も列も揃っていない場合は、ずれの小さい軸へ1マス移動して揃え直す（移動した敵フェイズは照射しない）。</b>'},
+  g2:{tag:'条件対象型', assign:'覚醒安定装置', how:'警戒圏（距離2以内）に味方がいれば、その中で最も近い味方を再構成照射する。同距離なら部隊順。いなければ、割り当てられた覚醒安定装置を照射する。照射には同じ行または列にいることが必要で、防壁で遮れる。<b>行も列も揃っていない場合は、ずれの小さい軸へ1マス移動して揃え直す（移動した敵フェイズは照射しない）。</b>'},
+  g3:{tag:'条件対象型', assign:'電力供給端末', how:'警戒圏（距離2以内）に味方がいれば、その中で最も近い味方を再構成照射する。同距離なら部隊順。いなければ、割り当てられた電力供給端末を照射する。照射には同じ行または列にいることが必要で、防壁で遮れる。<b>行も列も揃っていない場合は、ずれの小さい軸へ1マス移動して揃え直す（移動した敵フェイズは照射しない）。</b>'}
+};
+
+/* ══════════════════════════════════════════════
+   小道具
+   ══════════════════════════════════════════════ */
+const clone = v => JSON.parse(JSON.stringify(v));
+const kx = (x,y) => x + ',' + y;
+const inside = (x,y) => x>=0 && y>=0 && x<W && y<H;
+const dist = (a,b) => Math.abs(a.x-b.x) + Math.abs(a.y-b.y);
+const nap = ms => new Promise(r => setTimeout(r, ms));
+const coord = (x,y) => COL[x] + (y+1);
+
+const live = (id,s) => s.units.find(u => u.id===id && u.hp>0) || null;
+const allies = s => s.units.filter(u => u.side==='ally' && u.hp>0);
+const foes   = s => s.units.filter(u => u.side==='enemy' && u.hp>0);
+const blocked = (x,y,s,skip) =>
+  s.units.some(u => u.hp>0 && u.id!==skip && u.x===x && u.y===y) ||
+  s.walls.some(w => w.x===x && w.y===y) ||
+  !!siteAt(x,y);
+
+/* 突進の終点にいたユニットは、突進方向へ1マスだけ吹き飛ばされる。
+   その先が塞がっていれば吹き飛ばしは起こらず、衝突が発生する。上下への迂回はしない。 */
+const CRASH = 2;
+
+/* ══════════════════════════════════════════════
+   保全機（警戒圏反応型）
+   仕様書 5C.4 の実装。攻撃方法は常に「再構成照射」で一定。
+   変わるのは対象だけ。状態は保存しない。
+   ══════════════════════════════════════════════ */
+const sentries = () => ['g1','g2','g3'];
+const SHORT = {g1:'α', g2:'β', g3:'γ'};
+
+/* 警戒圏のマス */
+function zoneCells(s,eid){
+  const f = live(eid,s);
+  if(!f) return [];
+  const out=[];
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++)
+    if(dist(f,{x,y})<=SENTRY_R) out.push(kx(x,y));
+  return out;
+}
+/* 警戒圏内の味方から対象を選ぶ。近い順、同距離は部隊順（ROSTER順） */
+function zonePick(s,eid){
+  const f = live(eid,s);
+  if(!f) return null;
+  const order = ROSTER.map(u=>u.id);
+  const cand = allies(s).filter(a => dist(f,a)<=SENTRY_R);
+  if(!cand.length) return null;
+  cand.sort((a,b) => (dist(f,a)-dist(f,b)) || (order.indexOf(a.id)-order.indexOf(b.id)));
+  return cand[0];
+}
+/* 割り当て対象への射線：同じ行または列。防壁のみが遮る */
+function siteLine(s,eid){
+  const f = live(eid,s), t = ASSIGN[eid];
+  if(!f) return {aligned:false, cut:false, t};
+  const aligned = (f.x===t.x || f.y===t.y);
+  if(!aligned) return {aligned:false, cut:false, t};
+  return {aligned:true, cut:lineCut(f,t,s), t};
+}
+
+/* 揃え直しの移動：ずれの小さい軸を1マス詰める。同値なら縦を優先。
+   進めない場合は待機する。決定的で、盤面から読める規則にする。 */
+function alignStep(s,eid){
+  const f = live(eid,s), t = ASSIGN[eid];
+  if(!f) return null;
+  const dx = t.x - f.x, dy = t.y - f.y;
+  if(dx===0 || dy===0) return null;
+  const useY = Math.abs(dy) <= Math.abs(dx);
+  const nx = f.x + (useY ? 0 : Math.sign(dx));
+  const ny = f.y + (useY ? Math.sign(dy) : 0);
+  if(nx<0||ny<0||nx>=W||ny>=H) return null;
+  if(blocked(nx,ny,s,eid)) return null;
+  return {x:nx, y:ny};
+}
+function buildIntents(s){
+  const list = sentries()
+    .map(id => { const f = live(id,s); return f ? {eid:id, type:'sentry', spd:f.spd} : null; })
+    .filter(Boolean);
+  return list.sort((a,b) => b.spd - a.spd);
+}
+
+/* 予約マスは使用しない（5C.2 の設計原則：禁止せず、起きることを見せる） */
+function refreshIntents(s){
+  s.intents = buildIntents(s);
+  s.reserved = null;
+}
+
+/* 射線：同一行または同一列。防壁のみが遮る（ユニットは遮らない＝仮置き） */
+function lineCut(a,b,s){
+  if(a.y===b.y){
+    const lo=Math.min(a.x,b.x), hi=Math.max(a.x,b.x);
+    return s.walls.some(w => w.y===a.y && w.x>lo && w.x<hi);
+  }
+  if(a.x===b.x){
+    const lo=Math.min(a.y,b.y), hi=Math.max(a.y,b.y);
+    return s.walls.some(w => w.x===a.x && w.y>lo && w.y<hi);
+  }
+  return true;
+}
+function snipePick(s){
+  const g = live('e3',s);
+  if(!g) return null;
+  const order = ROSTER.map(u => u.id);
+  return allies(s)
+    .filter(a => (a.x===g.x || a.y===g.y) && !lineCut(g,a,s))
+    .sort((a,b) => a.hp-b.hp || dist(g,a)-dist(g,b) || order.indexOf(a.id)-order.indexOf(b.id))[0] || null;
+}
+function stepToward(mover,goal,s){
+  const dx = Math.sign(goal.x-mover.x), dy = Math.sign(goal.y-mover.y);
+  const tries = Math.abs(goal.x-mover.x) >= Math.abs(goal.y-mover.y)
+    ? [[mover.x+dx,mover.y],[mover.x,mover.y+dy]]
+    : [[mover.x,mover.y+dy],[mover.x+dx,mover.y]];
+  for(const [x,y] of tries){
+    if(inside(x,y) && !blocked(x,y,s,mover.id)){ mover.x=x; mover.y=y; return true; }
+  }
+  return false;
+}
+function strike(s,targetId,amount,allowGuard=true){
+  const target = live(targetId,s);
+  if(!target) return null;
+  const gid = allowGuard ? s.guards[targetId] : null;
+  const guard = (gid && gid!==targetId) ? live(gid,s) : null;
+  const taker = guard || target;
+  taker.hp -= amount;
+  return {takerId:taker.id, taker:taker.name, target:target.name,
+          amount, guarded:!!guard, down:taker.hp<=0};
+}
+
+/* ══════════════════════════════════════════════
+   決定的リゾルバ ── 予測と実行はここ一本だけ
+   render のたびに呼ばれ、敵フェイズ実行時は
+   ここが返した snapshot をそのまま再生する。
+   したがって予告と結果は原理的にズレない。
+   ══════════════════════════════════════════════ */
+function resolveEnemyPhase(base){
+  const s = clone(base);
+  const beats = [];
+  let boost = 0;
+  const beat = o => beats.push(Object.assign({}, o, {snap:clone(s)}));
+
+  for(const it of s.intents){
+    const foe = live(it.eid,s);
+
+    if(!foe){ beat({eid:it.eid, kind:'gone', out:'撃破済み。この行動は起きない。'}); continue; }
+    if(foe.halted){ beat({eid:it.eid, kind:'halted', out:'ブレイクにより中断。'}); continue; }
+
+    if(it.type==='sentry'){
+      const f = live(it.eid,s);
+      const intruder = zonePick(s,it.eid);
+
+      /* 警戒圏に侵入者がいる：対象を侵入者へ変更する（移動しない） */
+      if(intruder){
+        const r = strike(s,intruder.id,3);
+        beat({eid:it.eid, kind:'zap', hit:r, at:coord(intruder.x,intruder.y)});
+        continue;
+      }
+
+      const ln = siteLine(s,it.eid);
+
+      /* 行も列も揃っていない：1マス移動して揃え直す。この敵フェイズは照射しない */
+      if(!ln.aligned){
+        const st = alignStep(s,it.eid);
+        if(st){
+          f.x = st.x; f.y = st.y;
+          beat({eid:it.eid, kind:'shift', to:coord(st.x,st.y), t:ln.t.name});
+        } else {
+          beat({eid:it.eid, kind:'idle2', out:`${ln.t.name}へ揃え直す経路がなく、待機する。`});
+        }
+        continue;
+      }
+
+      /* 揃っているが防壁で遮られている */
+      if(ln.cut){
+        beat({eid:it.eid, kind:'idle2', out:`防壁により${ln.t.name}への射線が遮られている。`});
+        continue;
+      }
+
+      /* 照射 */
+      const t = ln.t;
+      s[t.key] = Math.max(0, s[t.key] - 3);
+      beat({eid:it.eid, kind:'zapsite', site:t, amount:3, left:s[t.key], dead:s[t.key]<=0});
+      continue;
+    }
+  }
+  return {beats, final:clone(s)};
+}
+
+/* ══════════════════════════════════════════════
+   状態
+   ══════════════════════════════════════════════ */
+let S, undoStack, phaseTop, lastPhaseTop, picked, mode, actionAnchor, journal, armed;
+
+function fresh(){
+  S = {
+    units: clone(ROSTER),
+    walls: [], guards: {},
+    phase:'ally', turn:1, goalDone:0, dur:DEVICE.max, pdur:POWER.max,
+    pending:null, resist:{},
+    intents: [], reserved:null,
+    activeFoe:null, resolvedFoes:[], impact:[]
+  };
+  refreshIntents(S);
+  undoStack = []; picked=null; mode='idle'; actionAnchor=null; armed=false;
+  journal = [];
+  phaseTop = clone(S); lastPhaseTop = null;
+  const v = document.getElementById('verdict'); v.hidden = true; v.className='verdict';
+  hideCurtain(); hideFlash();
+  setHint('動かす味方を選んでください。「誘」のマスへ入ると、保全機の対象が装置からその味方へ変わります。');
+  draw();
+  flashPhase('ally', `Turn ${S.turn}`, '味方フェイズ', '警戒圏は入れます。入ると対象が変わります', 1800);
+}
+
+function say(text,tone){
+  journal.unshift({text, tone, turn:S.turn});
+  if(journal.length > 60) journal.pop();
+}
+/* 盤面サイズを実測で決める。
+   CSSの見積もりに頼らず、実際に余っている高さから1マスの大きさを逆算する。 */
+function fitBoard(){
+  const root = document.documentElement;
+  if(window.innerWidth < 881 || window.innerHeight < 500){
+    root.style.removeProperty('--boardw');
+    return;
+  }
+  const col  = document.querySelector('.boardcol');
+  const key   = document.querySelector('.key');
+  const box   = document.querySelector('.plotwrap');
+  const dock  = document.querySelector('.dock');
+  if(!col || !key || !box || !dock) return;
+
+  const cs   = getComputedStyle(box);
+  const pad  = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 2;
+  const keyH = key.offsetHeight + parseFloat(getComputedStyle(key).marginTop);
+  const top  = col.getBoundingClientRect().top;
+  const bottom = dock.getBoundingClientRect().top - parseFloat(getComputedStyle(dock).marginTop);
+  const avail = bottom - top - keyH - pad - 6;   // 端数と枠線ぶんの余裕
+  if(!(avail > 120)) return;
+
+  const cell = avail / H;                      // 6行が収まる1マスの高さ
+  const w = cell * W + 20 + pad;               // 8列＋座標ラベル＋余白
+  root.style.setProperty('--boardw', Math.round(Math.max(300, w)) + 'px');
+}
+let fitPending = false;
+function scheduleFit(){
+  if(fitPending) return;
+  fitPending = true;
+  requestAnimationFrame(()=>{
+    fitBoard();
+    requestAnimationFrame(()=>{ fitBoard(); fitPending = false; });  // 幅変化ぶんを再計算
+  });
+}
+
+let flashTimer = null;
+function flashPhase(kind, over, name, sub, ms){
+  const f = document.getElementById('flash');
+  f.className = 'flash ' + kind;
+  document.getElementById('fxOver').textContent = over;
+  document.getElementById('fxName').textContent = name;
+  document.getElementById('fxSub').textContent  = sub || '';
+  f.hidden = false;
+  const band = f.querySelector('.band');   // アニメーションを再生し直す
+  band.style.animation = 'none';
+  void band.offsetWidth;
+  band.style.animation = '';
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>{ f.hidden = true; }, ms);
+  return nap(ms);
+}
+function hideFlash(){ clearTimeout(flashTimer); document.getElementById('flash').hidden = true; }
+
+let hintText = '';
+function setHint(t){ hintText = t; }
+
+/* ══════════════════════════════════════════════
+   味方フェイズの操作
+   ══════════════════════════════════════════════ */
+function pickAlly(id){
+  if(S.phase!=='ally') return;
+  const a = live(id,S);
+  if(!a || a.acted) return;
+  if(picked && picked!==id) revert();
+  actionAnchor = clone(S);
+  picked = id; mode='move';
+  setHint('移動先を選択。今いるマスを選べばその場に留まります。');
+  draw();
+}
+function revert(){
+  if(actionAnchor) S = clone(actionAnchor);
+  actionAnchor=null; picked=null; mode='idle';
+  setHint('動かす味方を選んでください。');
+  draw();
+}
+function seal(msg){
+  const a = live(picked,S);
+  if(a) a.acted = true;
+  if(actionAnchor) undoStack.push(clone(actionAnchor));
+  say(msg,'mark');
+  actionAnchor=null; picked=null; mode='idle'; armed=false;
+  setHint('次に動かす味方を選んでください。');
+
+  draw();
+}
+function reachable(a){
+  const out=[];
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+    const here = a.x===x && a.y===y;
+    if(dist(a,{x,y})<=a.move && (here || !blocked(x,y,S))) out.push(kx(x,y));
+  }
+  return out;
+}
+function aimable(){
+  const a = live(picked,S);
+  if(!a) return [];
+  if(mode==='strike') return foes(S).filter(e=>dist(a,e)===1).map(e=>kx(e.x,e.y));
+  if(mode==='break')  return foes(S).filter(e=>dist(a,e)===1 && !S.resist[e.id]).map(e=>kx(e.x,e.y));
+  if(mode==='pull')  return foes(S).filter(e=>dist(a,e)<=4).map(e=>kx(e.x,e.y));
+  if(mode==='guard') return allies(S).filter(u=>u.id!==a.id && dist(a,u)<=3).map(u=>kx(u.x,u.y));
+  if(mode==='wall'){
+    const out=[];
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++)
+      if(dist(a,{x,y})<=3 && !blocked(x,y,S)) out.push(kx(x,y));
+    return out;
+  }
+  return [];
+}
+function pullSpot(a,t){
+  let nx=t.x, ny=t.y;
+  const dx=Math.sign(a.x-t.x), dy=Math.sign(a.y-t.y);
+  if(Math.abs(a.x-t.x) >= Math.abs(a.y-t.y)) nx+=dx; else ny+=dy;
+  return {x:nx,y:ny};
+}
+function tapCell(x,y){
+  if(S.phase!=='ally') return;
+  const on = S.units.find(u=>u.hp>0 && u.x===x && u.y===y) || null;
+
+  if(mode==='idle'){ if(on && on.side==='ally') pickAlly(on.id); return; }
+  const a = live(picked,S);
+  if(!a) return;
+
+  if(mode==='move'){
+    if(reachable(a).includes(kx(x,y))){
+      a.x=x; a.y=y; mode='menu';
+      setHint('行動を選んでください。');
+      draw();
+    }
+    return;
+  }
+  if(!aimable().includes(kx(x,y))) return;
+
+  if(mode==='strike'){
+    on.hp -= 2;
+    seal(`${a.name}が${on.name}を攻撃（2）${on.hp<=0?'／撃破':''}`);
+  } else if(mode==='pull'){
+    const d = pullSpot(a,on);
+    if(inside(d.x,d.y) && !blocked(d.x,d.y,S)){
+      on.x=d.x; on.y=d.y;
+      seal(`レクトが${on.name}を${coord(d.x,d.y)}へ引き寄せた`);
+    } else setHint('引き寄せ先が塞がっています。別の敵を選んでください。');
+  } else if(mode==='wall'){
+    S.pending = {x,y};
+    seal(`ミレアが${coord(x,y)}に防壁を展開`);
+  } else if(mode==='guard'){
+    S.guards[on.id] = a.id;
+    seal(`ヴァルグが${on.name}を護衛対象に指定`);
+  } else if(mode==='break'){
+    on.halted = true; on.hp -= 1;
+    S.resist[on.id] = S.turn + 1;   /* 次のターンは同じ敵へ使えない */
+    seal(`レヴが${on.name}の予告行動を中断（1）`);
+  }
+}
+
+/* ══════════════════════════════════════════════
+   敵フェイズ実行 ── リゾルバの snapshot を再生
+   ══════════════════════════════════════════════ */
+async function runEnemyPhase(){
+  if(S.phase!=='ally' || allies(S).some(a=>!a.acted)) return;
+
+  const {beats, final} = resolveEnemyPhase(S);
+  const settled = [];
+
+  S.phase='enemy'; picked=null; mode='idle'; armed=false;
+  S.resolvedFoes=[]; undoStack=[];
+  draw();
+  await flashPhase('foe', `Turn ${S.turn}`, '敵フェイズ', '素早さ順に処理します', 1500);
+  await nap(220);
+
+  for(const b of beats){
+    S = b.snap;
+    S.phase='enemy';
+    S.activeFoe = b.eid;
+    S.resolvedFoes = settled.slice();
+    S.impact = (b.kind==='blast') ? b.cells : [];
+    draw();
+    await nap(b.kind==='move' ? 220 : b.kind==='blast' ? 620 : 440);
+
+    if(!b.silent){
+      say(describe(b), (b.kind==='hit'||b.kind==='blast') ? 'hurt' : null);
+      settled.push(b.eid);
+    }
+    S.impact = [];
+    S.resolvedFoes = settled.slice();
+    draw();
+    await nap(150);
+  }
+
+  S = final;
+  S.phase='enemy'; S.activeFoe=null; S.impact=[];
+  S.resolvedFoes = S.intents.map(i=>i.eid);
+  draw();
+  await nap(320);
+
+  if(S.dur<=0)  return finish(false,'覚醒安定装置が破壊された。覚醒安定処理が停止する（損耗救助）。');
+  if(S.pdur<=0) return finish(false,'電力供給端末が破壊された。覚醒安定処理が停止する（損耗救助）。');
+  if(allies(S).length===0) return finish(false,'味方が全滅。');
+  if(S.turn>=MAX_TURN) return finish(true,`覚醒安定処理が完了。装置 ${S.dur} ／ 端末 ${S.pdur} を残して搬送へ移行する。`);
+
+  S.turn += 1;
+  S.phase='ally';
+  /* 防壁は展開まで1ターン。前ターンに指定した位置が、このターンの開始時に実体化する。 */
+  S.walls = S.pending ? [{x:S.pending.x, y:S.pending.y}] : [];
+  S.pending = null;
+  /* ブレイクの耐性は1ターンで切れる */
+  Object.keys(S.resist).forEach(k => { if(S.resist[k] < S.turn) delete S.resist[k]; });
+  S.guards={}; S.activeFoe=null; S.resolvedFoes=[]; S.impact=[];
+  S.units.forEach(u => { if(u.side==='ally') u.acted=false; else u.halted=false; });
+  S.intents = buildIntents(S);
+  refreshIntents(S);
+  undoStack=[]; actionAnchor=null; picked=null; mode='idle';
+  lastPhaseTop = phaseTop;
+  phaseTop = clone(S);
+  say(`TURN ${S.turn} ／ 新しい敵行動を観測`, 'mark');
+  setHint('動かす味方を選んでください。');
+  draw();
+  flashPhase('ally', `Turn ${S.turn}`, '味方フェイズ',
+    S.turn===MAX_TURN ? '最終ターン' : '新しい敵行動を観測しました', 1500);
+}
+
+function finish(won,why){
+  S.phase = won ? 'win' : 'lose';
+  picked=null; mode='idle'; armed=false;
+
+  const v = document.getElementById('verdict');
+  v.hidden = false;
+  v.className = 'verdict ' + (won?'win':'lose');
+  v.innerHTML = `<p class="eyebrow" style="margin:0">${won?'Objective secured':'Observation failed'}</p>
+    <h2>${won?'作戦成功':'作戦失敗'}</h2><p>${why}</p>`;
+
+  say(why, won?'win':'hurt');
+  hideFlash();
+  draw();
+  showCurtain(won,why);
+}
+
+function showCurtain(won,why){
+  const c = document.getElementById('curtain');
+  c.className = 'curtain' + (won?'':' fail');
+  document.getElementById('slateOver').textContent = won ? 'Mission Complete' : 'Mission Failed';
+  document.getElementById('slateBig').textContent  = won ? '作戦成功' : '作戦失敗';
+  document.getElementById('slateStamp').textContent= won ? 'CLEAR' : 'FAILED';
+  document.getElementById('slateWhy').textContent  = why;
+
+  const alive = allies(S).length;
+  const tallies = [
+    ['ターン', `${S.turn} / ${MAX_TURN}`],
+    ['装置',   `${S.dur}/${DEVICE.max}`],
+    ['端末',   `${S.pdur}/${POWER.max}`],
+    ['生存',   `${alive} / 4`]
+  ];
+  document.getElementById('slateTallies').innerHTML =
+    tallies.map(([k,val]) => `<div class="tally"><b>${val}</b><span>${k}</span></div>`).join('');
+
+  const acts = document.getElementById('slateActs');
+  acts.innerHTML = '';
+  if(!won) acts.appendChild(mkBtn('このターンをやり直す', ()=>{ hideCurtain(); toTurnTop(); }, 'go'));
+  acts.appendChild(mkBtn('最初から', ()=>{ hideCurtain(); fresh(); }, won?'go':'ghost'));
+  acts.appendChild(mkBtn('盤面を確認する', hideCurtain, 'ghost'));
+
+  c.hidden = false;
+  const first = acts.querySelector('.btn');
+  if(first && first.focus) first.focus();
+}
+function hideCurtain(){ document.getElementById('curtain').hidden = true; }
+
+/* ══════════════════════════════════════════════
+   戻す
+   ══════════════════════════════════════════════ */
+function undoOne(){
+  if(picked){ revert(); return; }
+  if(!undoStack.length || S.phase!=='ally') return;
+  S = undoStack.pop();
+  journal.shift();
+  picked=null; mode='idle'; actionAnchor=null; armed=false;
+  setHint('直前の1手を戻しました。');
+  draw();
+}
+function toPhaseTop(){
+  if(S.phase!=='ally') return;
+  S = clone(phaseTop);
+  undoStack=[]; picked=null; mode='idle'; actionAnchor=null; armed=false;
+  setHint('フェイズ開始時点に戻しました。');
+  draw();
+}
+/* 勝敗が確定した直後は「今失敗したターン」の開始へ、
+   味方フェイズ中は「直前のターン」の開始へ戻る。 */
+function turnRetryTarget(){
+  if(S.phase==='win' || S.phase==='lose') return phaseTop;
+  if(S.phase==='ally') return lastPhaseTop;
+  return null;
+}
+function toTurnTop(){
+  const target = turnRetryTarget();
+  if(!target) return;
+  const goingBack = (S.phase!=='win' && S.phase!=='lose');
+  S = clone(target);
+  phaseTop = clone(target);
+  if(goingBack) lastPhaseTop = null;
+  undoStack=[]; picked=null; mode='idle'; actionAnchor=null; armed=false;
+  const v=document.getElementById('verdict'); v.hidden=true; v.className='verdict';
+  hideCurtain();
+  say(`TURN ${S.turn} の開始時点へ戻した`, 'mark');
+  setHint('ターン開始時点に戻しました。同じ盤面からやり直せます。');
+  draw();
+  flashPhase('ally', `Turn ${S.turn}`, '味方フェイズ', '観測をやり直します', 1500);
+}
+
+/* ══════════════════════════════════════════════
+   予測テキスト
+   ══════════════════════════════════════════════ */
+function describe(b,past){
+  const who = NAME[b.eid];
+  if(b.kind==='gone')   return `${who}：撃破済み`;
+  if(b.kind==='halted') return `${who}：行動中断`;
+  if(b.kind==='idle2')  return `${who}：${b.out}`;
+  if(b.kind==='zap'){
+    const h=b.hit;
+    return `${who}：警戒圏の${h.taker}へ再構成照射 ${h.amount}` +
+           `${h.guarded?`（${h.target}を護衛）`:''}${h.down?'／戦闘不能':''}`;
+  }
+  if(b.kind==='shift')  return `${who}：${b.t}へ揃え直すため ${b.to} へ移動（照射なし）`;
+  if(b.kind==='zapsite')
+    return `${who}：${b.site.name}へ再構成照射 ${b.amount}／構造耐久値 ${b.left}` + (b.dead?'／処理停止':'');
+  return `${who}：—`;
+}
+
+/* 警戒圏の現在状態と、その状態になっている理由を1行で返す（5B.2：条件は表示なしで使わない） */
+function zoneNote(eid){
+  const f = live(eid,S);
+  if(!f) return '';
+  const res = S.resist[eid] ? '<b>耐性：このターンはブレイク不可</b>／' : '';
+  const inside = zonePick(S,eid);
+  if(inside) return res + `<b>警戒圏：発動確定</b>／侵入者 ${NAME[inside.id]}`;
+  const cells = zoneCells(S,eid);
+  const movers = allies(S).filter(a=>!a.acted);
+  const who = movers.filter(a => reachable(a).some(c=>cells.includes(c))).map(a=>NAME[a.id]);
+  if(who.length) return res + `<b>警戒圏：到達可能</b>／届く味方 ${who.join('・')}`;
+  const why = movers.length ? '今ターンは移動範囲が警戒圏へ届かない' : '未行動の味方がいない';
+  return res + `<b>警戒圏：未成立</b>／${why}`;
+}
+
+function outcomeHTML(b){
+  if(!b) return '<span class="nil">—</span>';
+  if(b.kind==='gone')   return '<span class="nil">撃破済み。行動しない。</span>';
+  if(b.kind==='halted') return '<span class="good">中断。行動しない。</span>';
+  if(b.kind==='idle2')  return `<span class="good">${b.out}</span>`;
+  if(b.kind==='zap'){
+    const h=b.hit;
+    return `<span class="good">対象を侵入者へ変更</span><br>` +
+           `${h.guarded?`<span class="good">${h.taker}が肩代わり</span>／`:''}` +
+           `<b>${h.taker}</b> <span class="dmg">−${h.amount}</span>` +
+           `${h.down?' <span class="dmg">／戦闘不能</span>':''}`;
+  }
+  if(b.kind==='shift'){
+    return `<span class="good">照射しない</span>／${b.t}へ揃え直すため <b>${b.to}</b> へ1マス移動`;
+  }
+  if(b.kind==='zapsite'){
+    return `<b>${b.site.name}</b> <span class="dmg">−${b.amount}</span>` +
+           `<br>構造耐久値 <b>${b.left}</b> / ${b.site.max}` +
+           (b.dead? ' <span class="dmg">／覚醒安定処理が停止</span>':'');
+  }
+  return '—';
+}
+
+/* ══════════════════════════════════════════════
+   描画
+   ══════════════════════════════════════════════ */
+let forecast = {beats:[], final:null};
+
+function draw(){
+  forecast = (S.phase==='ally') ? resolveEnemyPhase(S) : forecast;
+  drawRoster();
+  drawPlot();
+  drawSpine();
+  drawPop();
+  drawChrome();
+}
+
+function drawChrome(){
+  document.getElementById('turnNum').textContent = S.turn;
+  /* 主条件＝覚醒安定処理が続くか。依存条件（構造耐久値）は内訳として下に置く。 */
+  const f = forecast.final;
+  const beats = forecast.beats || [];
+  const stop = SITES.some(o => (f ? f[o.key] : S[o.key]) <= 0);
+  const gc = document.getElementById('goalCount');
+  gc.textContent = stop ? '停止予定' : '継続予定';
+  gc.style.color = stop ? 'var(--ember)' : '';
+
+  const hitters = {};
+  beats.filter(b=>b.kind==='zapsite').forEach(b=>{
+    (hitters[b.site.key] = hitters[b.site.key] || []).push(NAME[b.eid]);
+  });
+  const dead = SITES.filter(o => (f ? f[o.key] : S[o.key]) <= 0);
+  document.getElementById('goalWhy').textContent = dead.length
+    ? `原因：${dead.map(o=>`${o.name}が0（${(hitters[o.key]||[]).join('・')}）`).join(' / ')}`
+    : (Object.keys(hitters).length ? '照射を受けている依存条件があります' : 'どちらの施設も照射されていない');
+
+  SITES.forEach(o=>{
+    const now = S[o.key], soon = f ? f[o.key] : now;
+    const bar = document.getElementById('bar-'+o.key);
+    if(bar){
+      bar.querySelector('.soon').style.width = `${Math.max(0,now )/o.max*100}%`;
+      bar.querySelector('.now' ).style.width = `${Math.max(0,soon)/o.max*100}%`;
+    }
+    const num = document.getElementById('num-'+o.key);
+    if(num){
+      num.textContent = `${now} → ${Math.max(0,soon)} / ${o.max}`;
+      num.style.color = soon<=0 ? 'var(--ember)' : '';
+    }
+  });
+
+  const bar = document.getElementById('phasebar');
+  const nm = document.getElementById('phaseName');
+  const nt = document.getElementById('phaseNote');
+  bar.className = 'phasebar' + (S.phase==='enemy'?' is-enemy':'') +
+                  ((S.phase==='win'||S.phase==='lose')?' is-over':'');
+  if(S.phase==='ally'){
+    const left = allies(S).filter(a=>!a.acted).length;
+    nm.textContent='味方フェイズ';
+    const base = left ? `残り ${left} 人。敵フェイズの結果は右に全部出ています。`
+                      : '全員行動済み。敵フェイズを実行できます。';
+    nt.textContent = picked ? base : (hintText || base);
+  }else if(S.phase==='enemy'){
+    nm.textContent='敵フェイズ';
+    nt.textContent = S.activeFoe ? `${NAME[S.activeFoe]} が行動中。` : '素早さ順に処理しています。';
+  }else if(S.phase==='win'){ nm.textContent='作戦成功'; nt.textContent='覚醒安定処理が完了しました。'; }
+  else { nm.textContent='作戦失敗'; nt.textContent='ターンをやり直すか、最初から再挑戦できます。'; }
+
+  const ready = S.phase==='ally' && allies(S).every(a=>a.acted);
+  const commit = document.getElementById('btnCommit');
+  commit.disabled = !ready;
+  commit.className = 'btn go' + (armed?' confirm':'');
+  commit.textContent = armed ? 'この未来で確定する' : '敵フェイズを実行';
+
+  document.getElementById('btnUndo').disabled = S.phase!=='ally' || (!undoStack.length && !picked);
+  document.getElementById('btnPhaseTop').disabled = S.phase!=='ally' || (!undoStack.length && !picked);
+
+  const retry = document.getElementById('btnTurnTop');
+  const back = (S.phase==='win'||S.phase==='lose');
+  retry.textContent = back ? 'このターンをやり直す' : '直前のターンへ戻る';
+  retry.disabled = !turnRetryTarget();
+
+  const log = document.getElementById('log');
+  log.innerHTML = journal.length
+    ? journal.map(e => `<li class="${e.tone||''}"><span class="t">T${e.turn}</span>${e.text}</li>`).join('')
+    : '<li>まだ何も起きていません。</li>';
+}
+
+function drawRoster(){
+  const box = document.getElementById('roster');
+  box.innerHTML='';
+  const after = forecast.final;
+  S.units.filter(u=>u.side==='ally').forEach(a => {
+    const b = document.createElement('button');
+    b.type='button';
+    const down = a.hp<=0;
+    b.className = 'card' + (picked===a.id?' is-sel':'') + (a.acted?' is-done':'') + (down?' is-down':'');
+    b.disabled = S.phase!=='ally' || a.acted || down;
+
+    const post = after ? (after.units.find(u=>u.id===a.id)?.hp ?? a.hp) : a.hp;
+    const loss = Math.max(0, a.hp - post);
+    const cur  = Math.max(0,a.hp)/a.max*100;
+    const lost = Math.min(cur, loss/a.max*100);
+
+    let msg='<span class="incoming safe">被害なし</span>';
+    if(down) msg='<span class="incoming">戦闘不能</span>';
+    else if(post<=0) msg=`<span class="incoming fatal">このターンで戦闘不能</span>`;
+    else if(loss>0) msg=`<span class="incoming">被弾 −${loss} → HP ${post}</span>`;
+
+    b.innerHTML =
+      `<div class="who"><span class="nm">${a.name}</span><span class="hpnum">${Math.max(0,a.hp)}/${a.max}</span></div>
+       <div class="role">${a.role}${a.acted?' ／ 行動済み':''}</div>
+       <div class="gauge"><i style="width:${cur}%"></i><b style="right:${100-cur}%;width:${lost}%"></b></div>
+       ${msg}`;
+    b.addEventListener('click',()=>pickAlly(a.id));
+    box.appendChild(b);
+  });
+}
+
+function drawPlot(){
+  const plot = document.getElementById('plot');
+  plot.innerHTML='';
+  const actor = picked ? live(picked,S) : null;
+  const reach = (actor && mode==='move') ? reachable(actor) : [];
+  const aims  = (actor && ['strike','pull','wall','guard','break'].includes(mode)) ? aimable() : [];
+  /* 警戒圏の3状態（5B.3）
+     発動確定：現在の入力で、その警戒圏に味方がいる
+     到達可能：未行動の味方の移動可能範囲が警戒圏と交差する
+     未成立　：どちらでもない */
+  /* いま誰がどの保全機を引き受けているか（誘導の成立） */
+  const divert = {};
+  sentries().forEach(eid=>{
+    const a = live(eid,S) ? zonePick(S,eid) : null;
+    if(a) (divert[a.id] = divert[a.id] || []).push(SHORT[eid]);
+  });
+  /* この敵フェイズに照射を受ける施設 */
+  const willHit = {};
+  (forecast.beats||[]).filter(b=>b.kind==='zapsite').forEach(b=>{
+    willHit[b.site.key] = (willHit[b.site.key]||0) + b.amount;
+  });
+
+  /* 警戒圏は保全機ごとに固定。圏そのものの見た目は状態で変えない。 */
+  const zoneCell = {}, zoneOwner = {}, zoneHot = {};
+  sentries().forEach(eid=>{
+    if(!live(eid,S)) return;
+    const hot = !!zonePick(S,eid);
+    zoneCells(S,eid).forEach(c => {
+      zoneCell[c] = true;
+      (zoneOwner[c] = zoneOwner[c] || []).push(eid);
+      if(hot) zoneHot[c] = true;
+    });
+  });
+
+  const corner = document.createElement('div');
+  corner.className='axis'; plot.appendChild(corner);
+  COL.forEach(c => { const d=document.createElement('div'); d.className='axis col'; d.textContent=c; plot.appendChild(d); });
+
+  for(let y=0;y<H;y++){
+    const rl=document.createElement('div'); rl.className='axis'; rl.textContent=y+1; plot.appendChild(rl);
+    for(let x=0;x<W;x++){
+      const c=document.createElement('button');
+      c.type='button'; c.className='cell';
+      if(y===H-1) c.classList.add('lastrow');
+      const id=kx(x,y);
+      c.dataset.cell = id;
+      if(reach.includes(id)) c.classList.add('reach');
+      if(aims.includes(id))  c.classList.add('aim');
+      if(zoneCell[id]){ c.classList.add('zone'); if(zoneHot[id]) c.classList.add('hot'); }
+      /* 移動できて、かつ入れば保全機の対象が装置から自分へ変わるマス */
+      if(reach.includes(id) && zoneOwner[id]){
+        const b=document.createElement('div');
+        b.className='lure';
+        b.textContent = zoneOwner[id].length>1 ? '誘×'+zoneOwner[id].length : '誘';
+        c.appendChild(b);
+      }
+      if(S.impact.includes(id)) c.classList.add('impact');
+      if(S.walls.some(w=>w.x===x&&w.y===y)) c.classList.add('barrier');
+      if(S.pending && S.pending.x===x && S.pending.y===y){
+        const q=document.createElement('div');
+        q.className='pending';
+        q.innerHTML='防壁<br>展開中';
+        c.appendChild(q);
+      }
+      if(reach.includes(id)||aims.includes(id)||(mode==='idle'&&S.units.some(u=>u.hp>0&&u.side==='ally'&&u.x===x&&u.y===y)))
+        c.classList.add('pick');
+
+      const site = siteAt(x,y);
+      if(site){
+        const now = S[site.key], hit = willHit[site.key] || 0;
+        const g=document.createElement('div');
+        g.className='node-goal'+(now<=0?'':' lit')+(hit?' struck':' safe');
+        g.innerHTML = hit
+          ? `${site.short}<br><b style="font-family:var(--font-data)">${now}→${Math.max(0,now-hit)}</b>`
+          : `${site.short}<br><b style="font-family:var(--font-data)">${now}/${site.max}</b>`;
+        c.appendChild(g);
+        const tag=document.createElement('div');
+        tag.className = 'sitetag ' + (hit?'bad':'ok');
+        tag.textContent = hit ? '照射される' : '照射なし';
+        c.appendChild(tag);
+      }
+
+      const on = S.units.find(u=>u.hp>0 && u.x===x && u.y===y);
+      /* 誘導が成立している味方に、引き受けている保全機を出す */
+      if(on && on.side==='ally' && divert[on.id]){
+        const bb=document.createElement('div');
+        bb.className='divert';
+        bb.textContent = divert[on.id].join('・') + ' を誘導';
+        c.appendChild(bb);
+      }
+      if(on){
+        const t=document.createElement('div');
+        t.className='token '+(on.side==='ally'?'ally':'foe')
+          + (on.acted?' spent':'') + (on.halted?' halted':'')
+          + (S.resist[on.id]?' resist':'')
+          + (on.side==='enemy'?' sentry-'+on.id:'')
+          + (S.activeFoe===on.id?' acting':'')
+          + (picked===on.id?' sel':'');
+        t.textContent = on.mark;
+        c.appendChild(t);
+        const hp=document.createElement('div');
+        hp.className='tokenhp'+(on.side==='enemy'?' foehp':'');
+        hp.innerHTML=`<i style="width:${Math.max(0,on.hp)/on.max*100}%"></i>`;
+        c.appendChild(hp);
+        c.setAttribute('aria-label',`${coord(x,y)} ${on.name} HP${on.hp}`);
+      }else{
+        c.setAttribute('aria-label',coord(x,y));
+      }
+      if(!c.classList.contains('pick')) c.tabIndex = -1;
+      c.addEventListener('click',()=>tapCell(x,y));
+      plot.appendChild(c);
+    }
+  }
+}
+
+function drawSpine(){
+  const list = document.getElementById('spine');
+  list.innerHTML='';
+  const byEid = {};
+  (forecast.beats||[]).forEach(b => { if(!b.silent) byEid[b.eid]=b; });
+  let chained = false;
+
+  S.intents.forEach(it => {
+    const b = byEid[it.eid];
+    const li = document.createElement('li');
+    const spent = S.resolvedFoes.includes(it.eid);
+    const dead  = !live(it.eid,S);
+    li.className = 'step'
+      + (S.activeFoe===it.eid ? ' live':'')
+      + (spent ? ' spent':'')
+      + (dead || (b&&b.kind==='halted') ? ' void':'')
+      + (chained ? ' chained':'');
+
+    const r = RULE[it.eid];
+    li.innerHTML =
+      `<div class="rail-line"></div>
+       <div class="pip">${it.spd}</div>
+       <div>
+         <div class="lbl"><b>${NAME[it.eid]}</b><span>SPD</span></div>
+         <div class="rule-tag">${r.tag}／割当：${r.assign}</div>
+         <div class="zonest">${zoneNote(it.eid)}</div>
+         <div class="how">${r.how}</div>
+         <div class="out">${outcomeHTML(b)}</div>
+         ${(chained && b && ['hit','blast'].includes(b.kind)) ? '<span class="chain-note">▲ 指揮官の強化を反映</span>' : ''}
+       </div>`;
+    list.appendChild(li);
+    if(b && b.kind==='boost') chained = true;
+  });
+}
+
+function mkBtn(label,fn,cls){
+  const b=document.createElement('button');
+  b.type='button'; b.className='btn'+(cls?' '+cls:''); b.textContent=label;
+  b.addEventListener('click',fn);
+  return b;
+}
+const AIMING = ['strike','pull','wall','guard','break'];
+
+function drawPop(){
+  const pop = document.getElementById('pop');
+  const a = (S.phase==='ally' && picked) ? live(picked,S) : null;
+  if(!a){ pop.hidden = true; pop.innerHTML=''; pop.className='pop'; return; }
+
+  pop.innerHTML = '';
+
+  /* 移動中・対象選択中は盤面を隠さないよう帯に畳む */
+  if(mode==='move' || AIMING.includes(mode)){
+    pop.className = 'pop bar' + (a.y >= H-2 ? ' atTop' : '');
+    pop.style.left=''; pop.style.top='';
+    const row = document.createElement('div');
+    row.className = 'barrow';
+    row.innerHTML = `<b>${a.name}</b><span>${hintText}</span>`;
+    pop.appendChild(row);
+    pop.appendChild(mode==='move'
+      ? mkBtn('選択をやめる', revert, 'ghost')
+      : mkBtn('コマンドに戻る', ()=>{ mode='menu'; setHint('行動を選んでください。'); draw(); }, 'ghost'));
+    pop.hidden = false;
+    return;
+  }
+
+  if(mode!=='menu'){ pop.hidden=true; return; }
+
+  pop.className = 'pop';
+  const head = document.createElement('div');
+  head.className='head';
+  head.innerHTML = `<b>${a.name}</b><span>HP ${a.hp}/${a.max} ・ ${coord(a.x,a.y)}</span>`;
+  pop.appendChild(head);
+
+  const say = document.createElement('div');
+  say.className='say';
+  say.textContent = hintText;
+  pop.appendChild(say);
+
+  const set = document.createElement('div');
+  set.className='set';
+  pop.appendChild(set);
+
+  const arm = (m,msg) => () => { mode=m; setHint(msg); draw(); };
+  const adj = foes(S).some(e=>dist(a,e)===1);
+
+  if(a.id==='r'){
+    const b=mkBtn('重力牽引', arm('pull','4マス以内の敵を選択。レクト側へ1マス引き寄せます。保全機を動かすと、警戒圏と装置への射線がずれます。'),'key-act');
+    b.disabled = !foes(S).some(e=>dist(a,e)<=4); set.appendChild(b);
+  }
+  if(a.id==='m'){
+    const wb=mkBtn('防壁展開', arm('wall','3マス以内の空きマスを選択。展開まで1ターンかかり、次のターン開始時に実体化して、そのターンの敵フェイズだけ射線を遮ります。'),'key-act');
+    wb.disabled = !!S.pending; set.appendChild(wb);
+  }
+  if(a.id==='v'){
+    const b=mkBtn('護衛指定', arm('guard','3マス以内の味方を選択。その味方への次の単体攻撃を肩代わりします。'),'key-act');
+    b.disabled = !allies(S).some(u=>u.id!==a.id && dist(a,u)<=3); set.appendChild(b);
+  }
+  if(a.id==='l'){
+    const b=mkBtn('ブレイク', arm('break','隣接する敵を選択。1ダメージ＋予告行動を中断します。中断された敵には耐性がつき、次のターンは同じ敵へ使えません。'),'key-act');
+    b.disabled = !adj; set.appendChild(b);
+  }
+  const atk = mkBtn('通常攻撃', arm('strike','隣接する敵を選択。2ダメージ。'));
+  atk.disabled = !adj; set.appendChild(atk);
+
+  const pair = document.createElement('div');
+  pair.className='pair';
+  pair.appendChild(mkBtn('待機', ()=>seal(`${a.name}は待機`),'ghost'));
+  pair.appendChild(mkBtn('移動し直す', revert,'ghost'));
+  set.appendChild(pair);
+
+  pop.hidden = false;
+  placePop(a);
+}
+
+/* 吹き出しをユニットの上（入らなければ下）へ。端はクランプし、矢印だけ指す。 */
+function placePop(a){
+  const pop = document.getElementById('pop');
+  const wrap = pop.parentElement;
+  const cell = wrap.querySelector(`[data-cell="${a.x},${a.y}"]`);
+  if(!cell || !cell.getBoundingClientRect) return;
+  const wr = wrap.getBoundingClientRect();
+  const cr = cell.getBoundingClientRect();
+  if(!wr.width) return;
+
+  pop.style.left='0px'; pop.style.top='0px';
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  const cx = cr.left - wr.left + cr.width/2;
+  const cTop = cr.top - wr.top, cBot = cTop + cr.height;
+
+  const below = cTop < ph + 14;
+  let left = Math.round(cx - pw/2);
+  left = Math.max(6, Math.min(left, wr.width - pw - 6));
+
+  pop.classList.toggle('below', below);
+  pop.style.left = left + 'px';
+  pop.style.top  = Math.round(below ? cBot + 10 : cTop - ph - 10) + 'px';
+  pop.style.setProperty('--arrow', Math.round(Math.max(16, Math.min(cx - left, pw - 16))) + 'px');
+}
+
+/* ══════════════════════════════════════════════
+   配線
+   ══════════════════════════════════════════════ */
+document.getElementById('btnCommit').addEventListener('click',()=>{
+  if(!armed){
+    armed = true;
+    setHint('この予測どおりに敵が行動します。もう一度押すと確定します。');
+    draw();
+    return;
+  }
+  armed = false;
+  runEnemyPhase();
+});
+document.getElementById('btnUndo').addEventListener('click',undoOne);
+document.getElementById('btnPhaseTop').addEventListener('click',toPhaseTop);
+document.getElementById('btnTurnTop').addEventListener('click',toTurnTop);
+document.getElementById('btnRestart').addEventListener('click',()=>fresh());
+
+
+window.addEventListener('resize',()=>{
+  scheduleFit();
+  if(S && S.phase==='ally' && picked && mode==='menu'){
+    const a = live(picked,S);
+    if(a) placePop(a);
+  }
+});
+
+document.addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  const k = e.key;
+
+  if(k==='Escape'){
+    if(!document.getElementById('curtain').hidden){ hideCurtain(); e.preventDefault(); return; }
+    if(!picked) return;
+    if(AIMING.includes(mode)){ mode='menu'; setHint('行動を選んでください。'); draw(); }
+    else revert();
+    e.preventDefault(); return;
+  }
+  if(k==='z'||k==='Z'){
+    if(!document.getElementById('btnUndo').disabled){ undoOne(); e.preventDefault(); }
+    return;
+  }
+  if(k==='Enter'){
+    const b=document.getElementById('btnCommit');
+    if(!b.disabled){ b.click(); e.preventDefault(); }
+    return;
+  }
+  if(k>='1' && k<='4'){
+    if(S.phase!=='ally') return;
+    const target = S.units.filter(u=>u.side==='ally')[Number(k)-1];
+    if(target && target.hp>0 && !target.acted){ pickAlly(target.id); e.preventDefault(); }
+  }
+});
+
+fresh();
+scheduleFit();
+window.addEventListener('load', scheduleFit);
+})();
+</script>
+</body>
+</html>
